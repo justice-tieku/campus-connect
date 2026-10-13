@@ -21,7 +21,9 @@ declare global {
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
-    const token = req.cookies?.[COOKIE_NAME] as string | undefined;
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+    const token = (req.cookies?.[COOKIE_NAME] as string | undefined) || headerToken;
     if (!token) {
       throw new HttpError(401, "Authentication required");
     }
@@ -60,7 +62,9 @@ export function requireRole(...roles: Role[]) {
 
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   try {
-    const token = req.cookies?.[COOKIE_NAME] as string | undefined;
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+    const token = (req.cookies?.[COOKIE_NAME] as string | undefined) || headerToken;
     if (!token) {
       next();
       return;

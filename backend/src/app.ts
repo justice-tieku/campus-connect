@@ -26,7 +26,12 @@ export function createApp() {
       origin: (requestOrigin, callback) => {
         // Allow requests with no origin (mobile apps, curl, server-to-server)
         if (!requestOrigin) return callback(null, true);
-        if (allowedOrigins.includes(requestOrigin) || allowedOrigins.includes("*")) {
+        if (
+          allowedOrigins.includes(requestOrigin) ||
+          allowedOrigins.includes("*") ||
+          requestOrigin.includes("vercel.app") ||
+          requestOrigin.includes("localhost")
+        ) {
           return callback(null, true);
         }
         return callback(new Error(`CORS origin not allowed: ${requestOrigin}`));

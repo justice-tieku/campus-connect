@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../api";
 import { supabase } from "../lib/supabase";
 import { Logo } from "../components/Logo";
 
@@ -14,10 +15,20 @@ export function ForgotPassword() {
     setError("");
     setBusy(true);
     try {
-      const { error: sbError } = await supabase.auth.resetPasswordForEmail(email, {
+      // 1. Trigger via Supabase Auth
+      const { error: sbError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      if (sbError) throw new Error(sbError.message);
+
+      // 2. Also notify backend endpoint as dual fallback
+      try {
+        await api.forgotPassword(email.trim().toLowerCase());
+      } catch (_) {}
+
+      if (sbError) {
+        // If Supabase returns rate-limit or specific issue
+        console.warn("Supabase reset email notice:", sbError.message);
+      }
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send reset email. Please try again.");

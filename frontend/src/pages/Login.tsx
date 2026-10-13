@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { Logo } from "../components/Logo";
 
 export function Login() {
   const { refresh } = useAuth();
@@ -9,8 +10,10 @@ export function Login() {
   const location = useLocation();
   const from = (location.state as { from?: string; message?: string } | null)?.from || "/projects";
   const message = (location.state as { from?: string; message?: string } | null)?.message;
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -19,44 +22,60 @@ export function Login() {
     setError("");
     setBusy(true);
     try {
-      await api.login(email, password);
+      const res = await api.login(email.trim().toLowerCase(), password);
+      if (!res || !res.user) {
+        throw new Error("Unable to sign in. Please verify your email and password.");
+      }
       await refresh();
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      console.error("Login failure:", err);
+      const msg = err instanceof Error ? err.message : "Invalid credentials or network issue";
+      setError(msg);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center animate-fade-in">
+    <div className="min-h-[80vh] flex items-center justify-center py-8 px-4 animate-fade-in">
       <div className="w-full max-w-md">
-        {/* Header */}
+        
+        {/* Branding header */}
         <div className="text-center mb-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600">
-            <i className="fa-solid fa-right-to-bracket text-xl text-white"></i>
-          </div>
-          <h1 className="mt-5 page-heading">Welcome back</h1>
-          <p className="mt-2 text-surface-500 dark:text-surface-400">Sign in with your campus email and password.</p>
+          <Link to="/" className="inline-flex items-center gap-2.5 no-underline mb-6">
+            <Logo size={42} />
+            <span className="font-display text-xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
+              Campus<span className="text-brand-600">Connect</span>
+            </span>
+          </Link>
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100 tracking-tight">
+            Welcome back
+          </h1>
+          <p className="mt-2 text-sm text-surface-500">
+            Sign in with your campus credentials to access your projects
+          </p>
+
           {message && (
-            <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800">
-              <i className="fa-solid fa-check-circle mr-2"></i>
-              {message}
+            <div className="mt-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+              <i className="fa-solid fa-circle-check text-emerald-500"></i>
+              <span>{message}</span>
             </div>
           )}
         </div>
 
         {/* Card */}
-        <div className="card p-8">
+        <div className="rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-8 shadow-xl">
           <form className="space-y-5" onSubmit={onSubmit}>
+            
+            {/* Email input */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
                 Email address
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <i className="fa-solid fa-envelope text-xs text-surface-400"></i>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-surface-400">
+                  <i className="fa-solid fa-envelope text-sm"></i>
                 </div>
                 <input
                   className="input pl-10"
@@ -70,17 +89,26 @@ export function Login() {
               </div>
             </div>
 
+            {/* Password input */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
+                >
+                  Forgot password? Reset now
+                </Link>
+              </div>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <i className="fa-solid fa-lock text-xs text-surface-400"></i>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-surface-400">
+                  <i className="fa-solid fa-lock text-sm"></i>
                 </div>
                 <input
-                  className="input pl-10"
-                  type="password"
+                  className="input pl-10 pr-10"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -88,45 +116,55 @@ export function Login() {
                   minLength={8}
                   placeholder="••••••••"
                 />
-              </div>
-              <div className="mt-2 text-right">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-surface-400 hover:text-surface-600"
                 >
-                  Forgot password?
-                </Link>
+                  <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"} text-xs`}></i>
+                </button>
               </div>
             </div>
 
+            {/* Error banner */}
             {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200 animate-slide-down dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800">
-                <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
-                {error}
+              <div className="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 flex items-start gap-2.5 animate-slide-down">
+                <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-500 shrink-0"></i>
+                <span>{error}</span>
               </div>
             )}
 
-            <button className="btn-primary w-full py-3" disabled={busy}>
+            {/* Sign in button */}
+            <button
+              className="btn-primary w-full py-3.5 text-sm font-bold rounded-2xl shadow-md hover:shadow-lg transition-all"
+              disabled={busy}
+            >
               {busy ? (
                 <>
-                  <i className="fa-solid fa-spinner fa-spin text-xs"></i>
+                  <i className="fa-solid fa-circle-notch fa-spin text-sm mr-2"></i>
                   Signing in…
                 </>
               ) : (
-                "Sign in"
+                <>
+                  <span>Sign in to account</span>
+                  <i className="fa-solid fa-arrow-right text-xs ml-2"></i>
+                </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              New here?{" "}
-              <Link to="/register" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
-                Create an account
+          {/* Bottom link */}
+          <div className="mt-8 pt-6 border-t border-surface-100 dark:border-surface-800 text-center">
+            <p className="text-sm text-surface-500">
+              Don't have an account yet?{" "}
+              <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline">
+                Create account &rarr;
               </Link>
             </p>
           </div>
         </div>
+
       </div>
     </div>
   );

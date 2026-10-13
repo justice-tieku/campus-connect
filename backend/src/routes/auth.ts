@@ -87,8 +87,9 @@ router.post(
       select: { id: true, email: true, role: true },
     });
 
+    const token = signToken({ userId: user.id, role: user.role });
     setAuthCookie(res, { userId: user.id, role: user.role });
-    res.status(201).json({ user });
+    res.status(201).json({ user, token });
   }),
 );
 
@@ -135,9 +136,11 @@ router.post(
       throw new HttpError(401, "Account is deactivated");
     }
 
+    const token = signToken({ userId: user.id, role: user.role });
     setAuthCookie(res, { userId: user.id, role: user.role });
     res.json({
       user: { id: user.id, email: user.email, role: user.role },
+      token,
     });
   }),
 );
@@ -163,6 +166,45 @@ router.get(
       },
     });
     res.json({ user });
+  }),
+);
+
+router.post(
+  "/forgot-password",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { email } = z.object({ email: z.string().trim().email() }).parse(req.body);
+    const origin = req.headers.origin || process.env.CLIENT_ORIGIN || "https://campusconnect-gh.vercel.app";
+    const redirectTo = `${origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      throw new HttpError(400, error.message);
+    }
+    res.json({ message: "Password reset link sent to your email." });
+  }),
+);
+
+router.post(
+  "/reset-password",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { password, token } = z.object({
+      password: z.string().min(8),
+      token: z.string().optional(),
+    }).parse(req.body);
+
+    if (token) {
+      // If token provided via admin / verify
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: "recovery",
+      });
+      if (error) throw new HttpError(400, error.message);
+      if (data.user) {
+        await supabaseAdmin.auth.admin.updateUserById(data.user.id, { password });
+      }
+    }
+    res.json({ message: "Password successfully updated." });
   }),
 );
 

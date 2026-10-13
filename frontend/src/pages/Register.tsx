@@ -93,31 +93,32 @@ export function Register() {
 
     setBusy(true);
     try {
-      // Backend only stores STUDENT | ADMIN — non-student types map to STUDENT role
-      // but we pass the accountType so the backend can store it in profile/biography
-      await api.register({
-        email,
+      const res = await api.register({
+        email: email.trim().toLowerCase(),
         password,
         role: "STUDENT",
-        firstName,
-        lastName,
-        institution,
-        programme,
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        institution: institution.trim() || undefined,
+        programme: programme.trim() || undefined,
       });
 
-      // After registration, store the account type in the profile biography field
+      if (!res || !res.user) {
+        throw new Error("Registration failed. Please check your details and try again.");
+      }
+
+      // After registration, store account type in biography
       if (accountType !== "STUDENT") {
         try {
           await api.updateProfile({ biography: `[${accountType}]` });
-        } catch (_) {
-          // non-critical — proceed even if profile update fails
-        }
+        } catch (_) {}
       }
 
       await refresh();
-      navigate("/profile");
+      navigate("/projects", { state: { message: "Account created! Welcome to CampusConnect." } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      console.error("Registration error:", err);
+      setError(err instanceof Error ? err.message : "Registration failed. Please check your information.");
     } finally {
       setBusy(false);
     }

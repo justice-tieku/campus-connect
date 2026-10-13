@@ -70,12 +70,28 @@ export type Report = {
   project?: { id: string; title: string } | null;
 };
 
-const API_BASE = (import.meta.env.VITE_API_ORIGIN || "").replace(/\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_ORIGIN || "https://campus-connect-98hk.onrender.com").replace(/\/+$/, "");
+
+export function getStoredToken(): string | null {
+  return localStorage.getItem("cc_auth_token");
+}
+
+export function setStoredToken(token: string | null) {
+  if (token) {
+    localStorage.setItem("cc_auth_token", token);
+  } else {
+    localStorage.removeItem("cc_auth_token");
+  }
+}
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+  const token = getStoredToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
   }
   const url = API_BASE ? `${API_BASE}${path}` : path;
   const res = await fetch(url, {
@@ -101,7 +117,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   me: () => request<{ user: User }>("/api/auth/me"),
-  register: (data: {
+  register: async (data: {
     email: string;
     password: string;
     role?: Role;
@@ -109,16 +125,26 @@ export const api = {
     lastName?: string;
     institution?: string;
     programme?: string;
-  }) =>
-    request<{ user: User }>("/api/auth/register", {
+  }) => {
+    const res = await request<{ user: User; token?: string }>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
-    }),
-  login: (email: string, password: string) =>
-    request<{ user: User }>("/api/auth/login", {
+    });
+    if (res.token) {
+      setStoredToken(res.token);
+    }
+    return res;
+  },
+  login: async (email: string, password: string) => {
+    const res = await request<{ user: User; token?: string }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
-    }),
+    });
+    if (res.token) {
+      setStoredToken(res.token);
+    }
+    return res;
+  },
   forgotPassword: (email: string) =>
     request<{ message: string }>("/api/auth/forgot-password", {
       method: "POST",

@@ -1,219 +1,229 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Logo } from "../components/Logo";
 
-const stats = [
-  { label: "Active projects", value: "100+", icon: "fa-solid fa-folder-open" },
-  { label: "Student profiles", value: "500+", icon: "fa-solid fa-users" },
-  { label: "Opportunities listed", value: "50+", icon: "fa-solid fa-rocket" },
+const categories = [
+  { label: "Students", count: "850+", icon: "fa-solid fa-graduation-cap", color: "from-blue-500 to-indigo-600", desc: "Build teams, find mentors & projects" },
+  { label: "Faculty", count: "120+", icon: "fa-solid fa-chalkboard-user", color: "from-purple-500 to-violet-600", desc: "Supervise research & post open labs" },
+  { label: "Alumni", count: "340+", icon: "fa-solid fa-user-tie", color: "from-emerald-500 to-teal-600", desc: "Offer internships & guide projects" },
+  { label: "Staff", count: "60+", icon: "fa-solid fa-building-user", color: "from-amber-500 to-orange-600", desc: "Campus updates & resource boards" },
 ];
 
-const features = [
+const highlights = [
   {
-    icon: "fa-solid fa-circle-nodes",
-    title: "Build your profile",
-    desc: "Showcase your skills, GitHub, portfolio, and programme details in one place.",
-    color: "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400",
+    icon: "fa-solid fa-layer-group",
+    title: "Curated Project Matching",
+    desc: "Match with teammates based on verified skills, departments, and mutual goals.",
   },
   {
-    icon: "fa-solid fa-rocket",
-    title: "Publish projects",
-    desc: "Set team capacity, list required skills and recruit the right teammates.",
-    color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    icon: "fa-solid fa-briefcase",
+    title: "Direct Campus Opportunities",
+    desc: "Discover internships, research grants, and campus hackathons directly from your university.",
   },
   {
-    icon: "fa-solid fa-magnifying-glass",
-    title: "Search & discover",
-    desc: "Filter projects by keyword, skill or status — then request to join.",
-    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    icon: "fa-solid fa-shield-halved",
+    title: "Verified Community",
+    desc: "Authentic university network monitored by staff and faculty for safe collaboration.",
   },
-  {
-    icon: "fa-solid fa-handshake",
-    title: "Collaborate",
-    desc: "Project owners accept teammates; admins moderate to keep the board clean.",
-    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-];
-
-const accountTypes = [
-  { label: "Students", icon: "fa-solid fa-graduation-cap", color: "bg-brand-600" },
-  { label: "Faculty", icon: "fa-solid fa-chalkboard-user", color: "bg-purple-600" },
-  { label: "Alumni", icon: "fa-solid fa-user-tie", color: "bg-emerald-600" },
-  { label: "Staff", icon: "fa-solid fa-id-badge", color: "bg-amber-500" },
 ];
 
 export function Home() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"student" | "faculty">("student");
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in -mt-4 pb-20">
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden">
-        {/* Background gradient blobs */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-white to-purple-50 dark:from-surface-900 dark:via-surface-950 dark:to-surface-900" />
-          <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand-800/20" />
-          <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-purple-200/40 blur-3xl dark:bg-purple-900/20" />
-          <div className="absolute top-1/2 right-10 h-60 w-60 rounded-full bg-accent-200/30 blur-3xl dark:bg-accent-800/10" />
-        </div>
+      {/* ─── Hero: Human Photography on one side, Portal/Actions on the other ─── */}
+      <section className="relative overflow-hidden pt-6 pb-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 lg:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-
-            {/* Left — headline + CTA */}
-            <div>
-              {/* Live status pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                Open to all campus members
+            {/* Left Column (7 cols): Heading, Value Proposition & Real Student Imagery */}
+            <div className="lg:col-span-7 flex flex-col justify-center space-y-8">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50/80 px-4 py-1.5 text-xs font-semibold text-brand-700 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Verified University Network
+                </div>
+                <h1 className="mt-5 font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-surface-900 dark:text-surface-100 leading-[1.12]">
+                  Where ambitious <br className="hidden sm:inline" />
+                  <span className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    campus minds connect
+                  </span>{" "}
+                  &amp; build.
+                </h1>
+                <p className="mt-4 text-base sm:text-lg text-surface-600 dark:text-surface-300 max-w-xl leading-relaxed">
+                  Join students, professors, and alumni collaborating on innovative projects, sharing department resources, and discovering vetted career opportunities.
+                </p>
               </div>
 
-              <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-surface-900 dark:text-surface-100 sm:text-5xl lg:text-6xl">
-                Find your people.{" "}
-                <span className="relative whitespace-nowrap">
-                  <span className="relative text-brand-600">Build together.</span>
-                </span>
-              </h1>
+              {/* Realistic High-Quality Student Collaboration Photography with Overlays */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900 group">
+                <img
+                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80"
+                  alt="University students collaborating together"
+                  className="w-full h-72 sm:h-84 object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-surface-950/20 to-transparent"></div>
 
-              <p className="mt-5 max-w-lg text-lg leading-relaxed text-surface-500 dark:text-surface-400">
-                CampusConnect brings students, faculty, alumni and staff onto one platform — publish projects, find collaborators by skill, and browse real opportunities posted by your institution.
-              </p>
-
-              {/* Who is it for badges */}
-              <div className="mt-5 flex flex-wrap gap-2">
-                {accountTypes.map((a) => (
-                  <span key={a.label} className="inline-flex items-center gap-1.5 rounded-full bg-surface-100 px-3 py-1 text-xs font-semibold text-surface-700 dark:bg-surface-800 dark:text-surface-300">
-                    <i className={`${a.icon} text-xs`}></i>
-                    {a.label}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  to={user ? "/projects" : "/register"}
-                  className="btn-primary text-base px-7 py-3 rounded-2xl no-underline shadow-md hover:shadow-lg"
-                >
-                  {user ? "Browse projects" : "Get started — it's free"}
-                  <i className="fa-solid fa-arrow-right text-sm"></i>
-                </Link>
-                <Link
-                  to="/opportunities"
-                  className="btn-secondary text-base px-7 py-3 rounded-2xl no-underline"
-                >
-                  <i className="fa-solid fa-rocket text-sm text-brand-600"></i>
-                  Opportunity board
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="mt-12 flex gap-8 border-t border-surface-200 dark:border-surface-800 pt-8">
-                {stats.map((s) => (
-                  <div key={s.label} className="text-center">
-                    <p className="font-display text-2xl font-extrabold text-surface-900 dark:text-surface-100">
-                      {s.value}
-                    </p>
-                    <p className="mt-0.5 text-xs text-surface-400 dark:text-surface-500">{s.label}</p>
+                {/* Floating Social Badge on Photo */}
+                <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-2">
+                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">1,200+ Active Members</p>
+                      <p className="text-xs text-surface-300">Across 18+ Departments</p>
+                    </div>
                   </div>
-                ))}
+                  <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-semibold">
+                    <i className="fa-solid fa-circle-check text-emerald-400"></i> Active today
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick statistics row */}
+              <div className="grid grid-cols-3 gap-4 border-t border-surface-200 dark:border-surface-800 pt-6">
+                <div>
+                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">140+</p>
+                  <p className="text-xs sm:text-sm text-surface-500">Live projects</p>
+                </div>
+                <div>
+                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">95%</p>
+                  <p className="text-xs sm:text-sm text-surface-500">Placement rate</p>
+                </div>
+                <div>
+                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">50+</p>
+                  <p className="text-xs sm:text-sm text-surface-500">Partner companies</p>
+                </div>
               </div>
             </div>
 
-            {/* Right — visual illustration card */}
-            <div className="relative">
-              {/* Main card */}
-              <div className="relative rounded-3xl border border-surface-200 bg-white p-6 shadow-xl dark:border-surface-800 dark:bg-surface-900">
-
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <Logo size={36} />
-                    <div>
-                      <p className="font-display text-sm font-bold text-surface-900 dark:text-surface-100">CampusConnect</p>
-                      <p className="text-xs text-surface-400">Connect · Collaborate · Create</p>
-                    </div>
+            {/* Right Column (5 cols): Interactive Auth & Direct Portal Card */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-6 sm:p-8 shadow-xl">
+                
+                {/* Header branding on card */}
+                <div className="flex items-center gap-3 pb-6 border-b border-surface-100 dark:border-surface-800">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600">
+                    <Logo size={32} />
                   </div>
-                  <span className="badge badge-success">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 inline-block"></span>
-                    Live
-                  </span>
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-surface-900 dark:text-surface-100">
+                      Campus Portal
+                    </h3>
+                    <p className="text-xs text-surface-500">
+                      {user ? `Logged in as ${user.email}` : "Select how you would like to enter"}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Member types */}
-                <div className="mb-5">
-                  <p className="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-3">
-                    Community members
-                  </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {accountTypes.map((a) => (
-                      <div key={a.label} className="flex flex-col items-center gap-1.5 rounded-xl bg-surface-50 py-3 px-2 dark:bg-surface-800">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${a.color}`}>
-                          <i className={`${a.icon} text-xs text-white`}></i>
+                {user ? (
+                  /* User is authenticated view */
+                  <div className="mt-6 space-y-4">
+                    <div className="rounded-2xl bg-surface-50 dark:bg-surface-800/60 p-4 border border-surface-200/60 dark:border-surface-700">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white font-bold">
+                          {user.email.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-xs font-medium text-surface-600 dark:text-surface-400">{a.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sample project cards */}
-                <p className="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-3">
-                  Active projects
-                </p>
-                <div className="space-y-2.5">
-                  {[
-                    { icon: "fa-solid fa-code", color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400", title: "Campus Marketplace App", tags: "React · Node.js", badge: "badge-success", status: "Open" },
-                    { icon: "fa-solid fa-mobile-screen", color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400", title: "Student Health Tracker", tags: "Flutter · Firebase", badge: "badge-brand", status: "In Progress" },
-                    { icon: "fa-solid fa-robot", color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400", title: "AI Lecture Summariser", tags: "Python · LangChain", badge: "badge-accent", status: "New" },
-                  ].map((p) => (
-                    <div key={p.title} className="flex items-center gap-3 rounded-xl bg-surface-50 p-3 dark:bg-surface-800">
-                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${p.color}`}>
-                        <i className={`${p.icon} text-sm`}></i>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-surface-900 dark:text-surface-100 truncate">{p.title}</p>
-                        <p className="text-xs text-surface-400">{p.tags}</p>
-                      </div>
-                      <span className={`badge ${p.badge} flex-shrink-0`}>{p.status}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Avatar row */}
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex -space-x-2">
-                    {["JD", "SK", "MR", "AB"].map((init, i) => {
-                      const colors = ["bg-brand-600", "bg-emerald-600", "bg-purple-600", "bg-orange-500"];
-                      return (
-                        <div key={init} className={`flex h-7 w-7 items-center justify-center rounded-full ${colors[i]} text-xs font-bold text-white ring-2 ring-white dark:ring-surface-900`}>
-                          {init}
+                        <div className="flex-1 truncate">
+                          <p className="text-sm font-bold text-surface-900 dark:text-surface-100 truncate">{user.email}</p>
+                          <span className="badge badge-brand text-[10px] mt-0.5">{user.role}</span>
                         </div>
-                      );
-                    })}
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-200 text-xs font-bold text-surface-600 ring-2 ring-white dark:bg-surface-700 dark:text-surface-300 dark:ring-surface-900">
-                      +50
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <Link to="/projects" className="btn-primary py-3 rounded-xl no-underline text-center">
+                        <i className="fa-solid fa-folder-open text-xs mr-2"></i>
+                        Projects
+                      </Link>
+                      <Link to="/profile" className="btn-secondary py-3 rounded-xl no-underline text-center">
+                        <i className="fa-solid fa-user text-xs mr-2"></i>
+                        Profile
+                      </Link>
+                    </div>
+
+                    <Link to="/opportunities" className="block w-full py-2.5 text-center text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+                      Explore Open Opportunities &rarr;
+                    </Link>
+                  </div>
+                ) : (
+                  /* Guest view: Action-oriented Register & Login portal */
+                  <div className="mt-6 space-y-5">
+                    {/* Role tabs */}
+                    <div className="flex rounded-xl bg-surface-100 dark:bg-surface-800 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("student")}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                          activeTab === "student"
+                            ? "bg-white dark:bg-surface-900 text-brand-600 shadow-sm"
+                            : "text-surface-600 dark:text-surface-400"
+                        }`}
+                      >
+                        <i className="fa-solid fa-user-graduate mr-1.5"></i> Student / Alumni
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("faculty")}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                          activeTab === "faculty"
+                            ? "bg-white dark:bg-surface-900 text-brand-600 shadow-sm"
+                            : "text-surface-600 dark:text-surface-400"
+                        }`}
+                      >
+                        <i className="fa-solid fa-chalkboard-user mr-1.5"></i> Faculty / Staff
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-surface-500 leading-relaxed">
+                      {activeTab === "student"
+                        ? "Register with your student email to join project squads, showcase portfolios, and browse internships."
+                        : "Connect with students for academic research, post department news, and supervise student initiatives."}
+                    </p>
+
+                    {/* Primary Portal CTAs */}
+                    <div className="space-y-3 pt-1">
+                      <Link
+                        to="/register"
+                        className="btn-primary w-full py-3.5 text-sm font-bold rounded-2xl no-underline flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                      >
+                        <span>Create Free Account</span>
+                        <i className="fa-solid fa-arrow-right text-xs"></i>
+                      </Link>
+
+                      <Link
+                        to="/login"
+                        className="btn-secondary w-full py-3.5 text-sm font-semibold rounded-2xl no-underline flex items-center justify-center gap-2"
+                      >
+                        <i className="fa-solid fa-right-to-bracket text-xs text-surface-400"></i>
+                        <span>Sign In to Existing Account</span>
+                      </Link>
+                    </div>
+
+                    <div className="pt-2 text-center">
+                      <Link
+                        to="/forgot-password"
+                        className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
+                      >
+                        Forgot your password? Reset now
+                      </Link>
+                    </div>
+
+                    {/* Trust badges */}
+                    <div className="pt-4 border-t border-surface-100 dark:border-surface-800 flex items-center justify-center gap-4 text-xs text-surface-400">
+                      <span><i className="fa-solid fa-lock mr-1 text-emerald-500"></i> Secure SSO</span>
+                      <span>&bull;</span>
+                      <span><i className="fa-solid fa-check mr-1 text-brand-500"></i> Free for Campus</span>
                     </div>
                   </div>
-                  <p className="text-xs text-surface-400 dark:text-surface-500">500+ members joined</p>
-                </div>
-              </div>
-
-              {/* Floating badge — top right */}
-              <div className="absolute -top-4 -right-4 animate-bounce" style={{ animationDuration: "3s" }}>
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-400 shadow-lg ring-4 ring-white dark:ring-surface-950">
-                  <i className="fa-solid fa-lightbulb text-xl text-surface-900"></i>
-                </div>
-              </div>
-
-              {/* Floating badge — bottom left */}
-              <div className="absolute -bottom-4 -left-4 animate-bounce" style={{ animationDuration: "4s", animationDelay: "1s" }}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 shadow-lg ring-4 ring-white dark:ring-surface-950">
-                  <i className="fa-solid fa-users text-lg text-white"></i>
-                </div>
+                )}
               </div>
             </div>
 
@@ -221,120 +231,60 @@ export function Home() {
         </div>
       </section>
 
-      {/* ─── Features Section ─── */}
-      <section className="py-16 lg:py-20">
+      {/* ─── Community Section: Who is on CampusConnect ─── */}
+      <section className="py-12 bg-surface-100/60 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <span className="inline-block rounded-full bg-brand-100 px-4 py-1.5 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 mb-4">
-              Everything you need
-            </span>
-            <h2 className="font-display text-3xl font-bold text-surface-900 dark:text-surface-100">
-              How CampusConnect works
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">
+              Built for every role on campus
             </h2>
-            <p className="mt-3 text-surface-500 dark:text-surface-400 max-w-lg mx-auto">
-              A complete platform for campus collaboration — from idea to team to delivery.
+            <p className="mt-2 text-sm text-surface-500">
+              One central network bridging student initiatives, academic leadership, and alumni networks.
             </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f, i) => (
-              <div key={f.title} className="group relative rounded-2xl border border-surface-200 bg-white p-6 transition-all duration-300 hover:border-brand-300 hover:shadow-lg dark:border-surface-800 dark:bg-surface-900 dark:hover:border-brand-700">
-                <div className="mb-2 text-xs font-bold text-surface-300 dark:text-surface-600">0{i + 1}</div>
-                <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${f.color}`}>
-                  <i className={`${f.icon} text-lg`}></i>
+            {categories.map((c) => (
+              <div
+                key={c.label}
+                className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className={`h-12 w-12 rounded-2xl bg-gradient-to-tr ${c.color} flex items-center justify-center text-white text-lg shadow-sm mb-4`}>
+                  <i className={c.icon}></i>
                 </div>
-                <h3 className="font-display text-base font-bold text-surface-900 dark:text-surface-100 mb-2">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">{f.desc}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-display text-base font-bold text-surface-900 dark:text-surface-100">{c.label}</h3>
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">{c.count}</span>
+                </div>
+                <p className="text-xs text-surface-500 dark:text-surface-400 leading-relaxed mt-2">{c.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Who can join section ─── */}
-      <section className="py-12">
+      {/* ─── Platform Features ─── */}
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="rounded-3xl bg-gradient-to-br from-surface-100 to-brand-50 dark:from-surface-900 dark:to-surface-800 p-8 lg:p-12">
-            <div className="grid gap-8 lg:grid-cols-2 items-center">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Open to everyone</span>
-                <h2 className="mt-3 font-display text-2xl font-bold text-surface-900 dark:text-surface-100">
-                  One platform for the whole campus community
-                </h2>
-                <p className="mt-3 text-surface-500 dark:text-surface-400">
-                  Whether you're a first-year student, a lecturer, a recent graduate, or support staff — there's a place for you here.
-                </p>
-                <div className="mt-5 flex flex-col gap-3">
-                  {[
-                    { type: "Students", desc: "Find teammates, publish projects, browse internships." },
-                    { type: "Faculty", desc: "Post research opportunities and connect with students." },
-                    { type: "Alumni", desc: "Mentor students, share job leads, stay connected." },
-                    { type: "Staff", desc: "Post campus events, scholarships, and announcements." },
-                  ].map((item) => (
-                    <div key={item.type} className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-600">
-                        <i className="fa-solid fa-check text-[10px] text-white"></i>
-                      </div>
-                      <p className="text-sm text-surface-700 dark:text-surface-300">
-                        <span className="font-semibold">{item.type}:</span> {item.desc}
-                      </p>
-                    </div>
-                  ))}
+          <div className="grid gap-8 lg:grid-cols-3">
+            {highlights.map((h) => (
+              <div
+                key={h.title}
+                className="rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-8 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-900/30 text-brand-600 mb-6">
+                    <i className={`${h.icon} text-lg`}></i>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-surface-900 dark:text-surface-100 mb-2">
+                    {h.title}
+                  </h3>
+                  <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
+                    {h.desc}
+                  </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {accountTypes.map((a) => (
-                  <div key={a.label} className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-white py-8 px-4 shadow-sm dark:bg-surface-800">
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${a.color}`}>
-                      <i className={`${a.icon} text-2xl text-white`}></i>
-                    </div>
-                    <span className="text-sm font-bold text-surface-900 dark:text-surface-100">{a.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CTA Section ─── */}
-      <section className="py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="relative overflow-hidden rounded-3xl bg-surface-900 px-8 py-14 text-center sm:px-16 dark:bg-surface-950">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-brand-500 blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-purple-500 blur-3xl"></div>
-            </div>
-            <div className="relative">
-              <span className="inline-block rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold text-white/80 mb-4">
-                Free forever for campus members
-              </span>
-              <h2 className="font-display text-2xl font-bold text-white sm:text-4xl">
-                Ready to build something great?
-              </h2>
-              <p className="mx-auto mt-4 max-w-md text-surface-300 leading-relaxed">
-                Join CampusConnect today. Create your profile, publish your idea, and find the team you need — in minutes.
-              </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link
-                  to={user ? "/projects" : "/register"}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-3.5 text-sm font-bold text-surface-900 no-underline transition-all duration-200 hover:bg-surface-100 hover:shadow-lg active:scale-[0.98]"
-                >
-                  {user ? "Go to projects" : "Create your account"}
-                  <i className="fa-solid fa-arrow-right text-xs"></i>
-                </Link>
-                {!user && (
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white no-underline transition-all duration-200 hover:bg-white/20"
-                  >
-                    Log in
-                  </Link>
-                )}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

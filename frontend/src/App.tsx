@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Protected } from "./components/Protected";
+import { SplashScreen } from "./components/SplashScreen";
 import { Admin } from "./pages/Admin";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { Home } from "./pages/Home";
@@ -14,8 +16,19 @@ import { Register } from "./pages/Register";
 import { ResetPassword } from "./pages/ResetPassword";
 
 export function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem("cc_splash_shown");
+  });
+
+  const handleSplashFinish = () => {
+    sessionStorage.setItem("cc_splash_shown", "1");
+    setShowSplash(false);
+  };
+
   return (
-    <Routes>
+    <>
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+      <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -32,5 +45,6 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
+    </>
   );
 }

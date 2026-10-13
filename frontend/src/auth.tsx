@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "./api";
-import { api } from "./api";
+import { api, setStoredToken } from "./api";
 import { supabase } from "./lib/supabase";
 
 type AuthContextValue = {
@@ -28,24 +28,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Check Supabase auth session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        void refresh();
-      } else {
-        setLoading(false);
-      }
-    });
+    // Check our backend session (stored token or cookie)
+    void refresh();
 
-    // Listen for auth changes
+    // Also listen for Supabase auth state changes if Supabase is used
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         void refresh();
-      } else {
-        setUser(null);
-        setLoading(false);
       }
     });
 
@@ -58,8 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       refresh,
       logout: async () => {
-        await supabase.auth.signOut();
-        await api.logout();
+        try {
+          await supabase.auth.signOut();
+        } catch (_) {}
+        try {
+          await api.logout();
+        } catch (_) {}
+        setStoredToken(null);
         setUser(null);
       },
     }),
