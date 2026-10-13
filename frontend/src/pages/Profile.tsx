@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, type Profile as ProfileType, type User } from "../api";
+import { api, type Profile as ProfileType } from "../api";
 import { useAuth } from "../auth";
 
 const empty: Partial<ProfileType> = {

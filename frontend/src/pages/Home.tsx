@@ -2,28 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Logo } from "../components/Logo";
 
-const features = [
-  {
-    icon: "fa-solid fa-users",
-    title: "Build your profile",
-    desc: "Showcase skills, GitHub, portfolio, and programme details.",
-  },
-  {
-    icon: "fa-solid fa-rocket",
-    title: "Publish projects",
-    desc: "Set capacity, required skills, and recruit teammates.",
-  },
-  {
-    icon: "fa-solid fa-magnifying-glass",
-    title: "Search & discover",
-    desc: "Filter by keyword, skill, or status — then request to join.",
-  },
-  {
-    icon: "fa-solid fa-handshake",
-    title: "Collaborate",
-    desc: "Owners accept teammates; admins keep the board clean.",
-  },
-];
+
 
 const stats = [
   { label: "Active projects", value: "100+" },
