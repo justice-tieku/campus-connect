@@ -13,6 +13,11 @@ const router = Router();
 const credentialsSchema = z.object({
   email: z.string().trim().email().max(255).transform((v) => v.toLowerCase()),
   password: z.string().min(8).max(128),
+  role: z.enum(["STUDENT", "ADMIN", "FACULTY", "ALUMNI", "STAFF"]).optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  institution: z.string().optional(),
+  programme: z.string().optional(),
 });
 
 const authLimiter = rateLimit({
@@ -27,7 +32,7 @@ router.post(
   "/register",
   authLimiter,
   asyncHandler(async (req, res) => {
-    const { email, password } = credentialsSchema.parse(req.body);
+    const { email, password, role, firstName, lastName, institution, programme } = credentialsSchema.parse(req.body);
 
     // Check if user already exists in our database
     const existingDbUser = await prisma.user.findUnique({
@@ -71,7 +76,12 @@ router.post(
       data: {
         id: authUser.id,
         email: authUser.email!,
-        role: "STUDENT",
+        password,
+        role: role || "STUDENT",
+        firstName,
+        lastName,
+        institution,
+        programme,
         profile: { create: {} },
       },
       select: { id: true, email: true, role: true },

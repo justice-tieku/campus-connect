@@ -11,6 +11,9 @@ datasource db {
 enum Role {
   STUDENT
   ADMIN
+  FACULTY
+  ALUMNI
+  STAFF
 }
 
 enum ProjectStatus {
@@ -47,12 +50,17 @@ enum NotificationType {
 }
 
 model User {
-  id        String   @id
-  email     String   @unique
-  role      Role     @default(STUDENT)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id
+  email       String   @unique
+  password    String?
+  role        Role     @default(STUDENT)
+  firstName   String?
+  lastName    String?
+  institution String?
+  programme   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   profile            Profile?
   createdProjects    Project[]         @relation("ProjectCreator")

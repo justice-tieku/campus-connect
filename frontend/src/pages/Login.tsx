@@ -7,7 +7,8 @@ export function Login() {
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || "/projects";
+  const from = (location.state as { from?: string; message?: string } | null)?.from || "/projects";
+  const message = (location.state as { from?: string; message?: string } | null)?.message;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,6 +39,12 @@ export function Login() {
           </div>
           <h1 className="mt-5 page-heading">Welcome back</h1>
           <p className="mt-2 text-surface-500 dark:text-surface-400">Sign in with your campus email and password.</p>
+          {message && (
+            <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800">
+              <i className="fa-solid fa-check-circle mr-2"></i>
+              {message}
+            </div>
+          )}
         </div>
 
         {/* Card */}
@@ -81,6 +88,14 @@ export function Login() {
                   minLength={8}
                   placeholder="••••••••"
                 />
+              </div>
+              <div className="mt-2 text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                >
+                  Forgot password?
+                </Link>
               </div>
             </div>
 

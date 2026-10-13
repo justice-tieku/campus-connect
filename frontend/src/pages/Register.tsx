@@ -2,12 +2,18 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { Logo } from "../components/Logo";
 
 export function Register() {
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<"STUDENT" | "FACULTY" | "ALUMNI" | "STAFF">("STUDENT");
+  const [institution, setInstitution] = useState("");
+  const [programme, setProgramme] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -16,7 +22,15 @@ export function Register() {
     setError("");
     setBusy(true);
     try {
-      await api.register(email, password);
+      await api.register({
+        email,
+        password,
+        role,
+        firstName,
+        lastName,
+        institution,
+        programme,
+      });
       await refresh();
       navigate("/profile");
     } catch (err) {
@@ -32,17 +46,62 @@ export function Register() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600">
-            <i className="fa-solid fa-user-plus text-xl text-white"></i>
+            <Logo size={32} />
           </div>
           <h1 className="mt-5 page-heading">Create your account</h1>
           <p className="mt-2 text-surface-500">
-            Students register here. Admin accounts are provisioned separately.
+            Join CampusConnect to collaborate on projects and discover opportunities.
           </p>
         </div>
 
         {/* Card */}
         <div className="panel p-8">
           <form className="space-y-5" onSubmit={onSubmit}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-surface-700">
+                  First name
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-surface-700">
+                  Last name
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-surface-700">
+                Account type
+              </label>
+              <select
+                className="input"
+                value={role}
+                onChange={(e) => setRole(e.target.value as any)}
+              >
+                <option value="STUDENT">Student</option>
+                <option value="FACULTY">Faculty</option>
+                <option value="ALUMNI">Alumni</option>
+                <option value="STAFF">Staff</option>
+              </select>
+            </div>
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-surface-700">
                 Email address
@@ -61,6 +120,32 @@ export function Register() {
                   placeholder="you@university.edu"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-surface-700">
+                Institution
+              </label>
+              <input
+                className="input"
+                type="text"
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+                placeholder="University name"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-surface-700">
+                Programme/Department
+              </label>
+              <input
+                className="input"
+                type="text"
+                value={programme}
+                onChange={(e) => setProgramme(e.target.value)}
+                placeholder="Computer Science, Engineering, etc."
+              />
             </div>
 
             <div>

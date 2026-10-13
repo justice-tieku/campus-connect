@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
+import { Logo } from "./Logo";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2 px-3.5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 no-underline ${
+  `flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 no-underline ${
     isActive
-      ? "bg-brand-600 text-white"
+      ? "bg-brand-600 text-white shadow-md"
       : "text-surface-600 hover:bg-surface-100 hover:text-surface-900 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-100"
   }`;
 
@@ -33,23 +34,27 @@ export function Layout() {
 
   const navLinks = (
     <>
+      <NavLink to="/" className={linkClass} onClick={() => setOpen(false)}>
+        <i className="fa-solid fa-home text-sm"></i>
+        Home
+      </NavLink>
       <NavLink to="/projects" className={linkClass} onClick={() => setOpen(false)}>
-        <i className="fa-solid fa-folder-open text-xs"></i>
+        <i className="fa-solid fa-folder-open text-sm"></i>
         Projects
       </NavLink>
       <NavLink to="/opportunities" className={linkClass} onClick={() => setOpen(false)}>
-        <i className="fa-solid fa-rocket text-xs"></i>
+        <i className="fa-solid fa-rocket text-sm"></i>
         Opportunities
       </NavLink>
       {user && (
         <NavLink to="/profile" className={linkClass} onClick={() => setOpen(false)}>
-          <i className="fa-solid fa-user text-xs"></i>
+          <i className="fa-solid fa-user text-sm"></i>
           Profile
         </NavLink>
       )}
       {user?.role === "ADMIN" && (
         <NavLink to="/admin" className={linkClass} onClick={() => setOpen(false)}>
-          <i className="fa-solid fa-shield-halved text-xs"></i>
+          <i className="fa-solid fa-shield-halved text-sm"></i>
           Admin
         </NavLink>
       )}
@@ -63,8 +68,8 @@ export function Layout() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           {/* Logo */}
           <Link to="/" className="group flex items-center gap-2.5 no-underline">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 transition-transform duration-200 group-hover:-rotate-6">
-              <i className="fa-solid fa-graduation-cap text-sm text-white"></i>
+            <div className="transition-transform duration-200 group-hover:-rotate-6">
+              <Logo size={36} />
             </div>
             <span className="font-display text-lg font-bold tracking-tight text-surface-900 dark:text-surface-100">
               Campus<span className="text-brand-600">Connect</span>
@@ -171,9 +176,7 @@ export function Layout() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600">
-                <i className="fa-solid fa-graduation-cap text-[10px] text-white"></i>
-              </div>
+              <Logo size={28} />
               <span className="font-display text-sm font-bold text-surface-900 dark:text-surface-100">
                 Campus<span className="text-brand-600">Connect</span>
               </span>

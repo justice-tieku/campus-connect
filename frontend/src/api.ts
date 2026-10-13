@@ -1,4 +1,4 @@
-export type Role = "STUDENT" | "ADMIN";
+export type Role = "STUDENT" | "ADMIN" | "FACULTY" | "ALUMNI" | "STAFF";
 export type ProjectStatus = "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CLOSED";
 export type JoinRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type OpportunityType = "INTERNSHIP" | "EVENT" | "SCHOLARSHIP" | "OTHER";
@@ -101,15 +101,33 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   me: () => request<{ user: User }>("/api/auth/me"),
-  register: (email: string, password: string) =>
+  register: (data: {
+    email: string;
+    password: string;
+    role?: Role;
+    firstName?: string;
+    lastName?: string;
+    institution?: string;
+    programme?: string;
+  }) =>
     request<{ user: User }>("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(data),
     }),
   login: (email: string, password: string) =>
     request<{ user: User }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ message: string }>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
     }),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   getProfile: () => request<{ profile: Profile | null }>("/api/profile/me"),

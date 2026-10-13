@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, type Profile as ProfileType } from "../api";
+import { api, type Profile as ProfileType, type User } from "../api";
+import { useAuth } from "../auth";
 
 const empty: Partial<ProfileType> = {
   biography: "",
@@ -12,6 +13,7 @@ const empty: Partial<ProfileType> = {
 };
 
 export function Profile() {
+  const { user } = useAuth();
   const [form, setForm] = useState(empty);
   const [skillInput, setSkillInput] = useState("");
   const [error, setError] = useState("");
@@ -63,11 +65,21 @@ export function Profile() {
     <div className="mx-auto max-w-2xl animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="page-heading">
-          <i className="fa-solid fa-user-pen mr-3 text-brand-500"></i>
-          Your profile
-        </h1>
-        <p className="mt-2 text-surface-500 dark:text-surface-400">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-xl font-bold text-white">
+            {user?.email.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="page-heading mb-1">
+              Your profile
+            </h1>
+            <div className="flex items-center gap-2">
+              <span className="badge badge-brand">{user?.role}</span>
+              <span className="text-sm text-surface-500">{user?.email}</span>
+            </div>
+          </div>
+        </div>
+        <p className="text-surface-500 dark:text-surface-400">
           This info is shown to teammates when you request to join a project.
         </p>
       </div>
