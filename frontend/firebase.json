@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "public": "dist/",
+    "rewrites": [
+      {
+        "source": "/api/auth/me",
+        "destination": "/api/auth/me"
+      }
+    ]
+  },
+  "firestore": {
+    "databaseURL": "https://campus-connect-d353d-default-rtdb.firebaseio.com"
+  }
+}
