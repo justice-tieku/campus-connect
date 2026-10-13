@@ -150,6 +150,51 @@ router.post("/logout", asyncHandler(async (req, res) => {
   res.json({ ok: true });
 }));
 
+router.post(
+  "/sync-oauth",
+  asyncHandler(async (req, res) => {
+    const { email, id } = z.object({
+      email: z.string().trim().email(),
+      id: z.string(),
+    }).parse(req.body);
+
+    // Upsert user in our database
+    let user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+
+    if (!user) {
+      // Check if user exists with this email under different id
+      const existingByEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingByEmail) {
+        user = existingByEmail;
+      } else {
+        user = await prisma.user.create({
+          data: {
+            id,
+            email,
+            role: "STUDENT",
+            profile: { create: {} },
+          },
+          select: { id: true, email: true, role: true, isActive: true },
+        });
+      }
+    }
+
+    if (!user.isActive) {
+      throw new HttpError(401, "Account is deactivated");
+    }
+
+    const token = signToken({ userId: user.id, role: user.role });
+    setAuthCookie(res, { userId: user.id, role: user.role });
+    res.json({
+      user: { id: user.id, email: user.email, role: user.role },
+      token,
+    });
+  }),
+);
+
 router.get(
   "/me",
   requireAuth,

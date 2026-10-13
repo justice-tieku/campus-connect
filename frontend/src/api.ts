@@ -145,6 +145,16 @@ export const api = {
     }
     return res;
   },
+  syncOAuth: async (user: { id: string; email: string }) => {
+    const res = await request<{ user: User; token?: string }>("/api/auth/sync-oauth", {
+      method: "POST",
+      body: JSON.stringify(user),
+    });
+    if (res.token) {
+      setStoredToken(res.token);
+    }
+    return res;
+  },
   forgotPassword: (email: string) =>
     request<{ message: string }>("/api/auth/forgot-password", {
       method: "POST",

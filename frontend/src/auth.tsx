@@ -31,12 +31,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check our backend session (stored token or cookie)
     void refresh();
 
-    // Also listen for Supabase auth state changes if Supabase is used
+    // Listen for Supabase auth state changes (e.g. Google OAuth redirect)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        void refresh();
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user?.email) {
+        try {
+          await api.syncOAuth({
+            id: session.user.id,
+            email: session.user.email,
+          });
+        } catch (err) {
+          console.warn("OAuth sync error:", err);
+        }
+        await refresh();
       }
     });
 
