@@ -136,11 +136,8 @@ export function ResetPassword() {
                 New password
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <i className="fa-solid fa-lock text-xs text-surface-400"></i>
-                </div>
                 <input
-                  className="input pl-10 pr-10"
+                  className="input pr-10"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   value={password}
@@ -183,11 +180,8 @@ export function ResetPassword() {
                 Confirm new password
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <i className="fa-solid fa-lock text-xs text-surface-400"></i>
-                </div>
                 <input
-                  className="input pl-10 pr-10"
+                  className="input pr-10"
                   type={showConfirm ? "text" : "password"}
                   autoComplete="new-password"
                   value={confirmPassword}

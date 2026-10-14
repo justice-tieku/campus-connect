@@ -96,20 +96,15 @@ export function ForgotPassword() {
                 <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
                   Email address
                 </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <i className="fa-solid fa-envelope text-xs text-surface-400"></i>
-                  </div>
-                  <input
-                    className="input pl-10"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="you@university.edu"
-                  />
-                </div>
+                <input
+                  className="input"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@university.edu"
+                />
               </div>
 
               {error && (

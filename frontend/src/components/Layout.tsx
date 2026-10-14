@@ -63,10 +63,8 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-surface-950">
-      {/* Navigation */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-surface-200 dark:bg-surface-950/80 dark:border-surface-800">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          {/* Logo */}
           <Link to="/" className="group flex items-center gap-2.5 no-underline">
             <Logo size={32} />
             <span className="font-display text-lg font-bold tracking-tight text-surface-900 dark:text-surface-100">
@@ -74,10 +72,8 @@ export function Layout() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden items-center gap-1 md:flex">{navLinks}</nav>
 
-          {/* Desktop auth */}
           <div className="hidden items-center gap-3 md:flex">
             <button
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-200 text-surface-600 transition-all duration-200 hover:bg-surface-100 hover:border-surface-300 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
@@ -112,7 +108,6 @@ export function Layout() {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <button
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-200 text-surface-600 transition-all duration-200 hover:bg-surface-100 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 md:hidden"
             onClick={() => setOpen((v) => !v)}
@@ -123,7 +118,6 @@ export function Layout() {
           </button>
         </div>
 
-        {/* Mobile nav dropdown */}
         {open && (
           <nav className="animate-slide-down space-y-1 border-t border-surface-200 bg-white/95 backdrop-blur-sm px-4 py-4 md:hidden dark:bg-surface-950/95 dark:border-surface-800">
             {navLinks}
@@ -134,7 +128,7 @@ export function Layout() {
                   toggleDarkMode();
                 }}
               >
-                <i className={`fa-solid ${darkMode ? "fa-sun" : "fa-moon"} text-xs mr-2"></i>
+                <i className={`fa-solid ${darkMode ? "fa-sun" : "fa-moon"} text-xs mr-2`}></i>
                 {darkMode ? "Light mode" : "Dark mode"}
               </button>
               {user ? (
@@ -163,13 +157,10 @@ export function Layout() {
         )}
       </header>
 
-
-      {/* Main content */}
       <main className={`mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 ${isHome ? "py-0" : "py-8 lg:py-12"}`}>
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-surface-200 bg-surface-50 dark:border-surface-800 dark:bg-surface-950 mt-auto">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
