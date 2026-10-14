@@ -4,10 +4,10 @@ import { useAuth } from "../auth";
 import { Logo } from "../components/Logo";
 
 const categories = [
-  { label: "Students", count: "850+", icon: "fa-solid fa-graduation-cap", color: "from-blue-500 to-indigo-600", desc: "Build teams, find mentors & projects" },
-  { label: "Faculty", count: "120+", icon: "fa-solid fa-chalkboard-user", color: "from-purple-500 to-violet-600", desc: "Supervise research & post open labs" },
-  { label: "Alumni", count: "340+", icon: "fa-solid fa-user-tie", color: "from-emerald-500 to-teal-600", desc: "Offer internships & guide projects" },
-  { label: "Staff", count: "60+", icon: "fa-solid fa-building-user", color: "from-amber-500 to-orange-600", desc: "Campus updates & resource boards" },
+  { label: "Students", count: "850+", icon: "fa-solid fa-graduation-cap", color: "bg-blue-600", desc: "Build teams, find mentors & projects" },
+  { label: "Faculty", count: "120+", icon: "fa-solid fa-chalkboard-user", color: "bg-purple-600", desc: "Supervise research & post open labs" },
+  { label: "Alumni", count: "340+", icon: "fa-solid fa-user-tie", color: "bg-emerald-600", desc: "Offer internships & guide projects" },
+  { label: "Staff", count: "60+", icon: "fa-solid fa-building-user", color: "bg-amber-600", desc: "Campus updates & resource boards" },
 ];
 
 const highlights = [
@@ -49,7 +49,7 @@ export function Home() {
                 </div>
                 <h1 className="mt-5 font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-surface-900 dark:text-surface-100 leading-[1.12]">
                   Where ambitious <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  <span className="text-brand-600">
                     campus minds connect
                   </span>{" "}
                   &amp; build.
@@ -59,30 +59,26 @@ export function Home() {
                 </p>
               </div>
 
-              {/* Realistic High-Quality Student Collaboration Photography with Overlays */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900 group">
+              {/* Realistic High-Quality Student Collaboration Photography */}
+              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900 group">
                 <img
                   src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80"
                   alt="University students collaborating together"
                   className="w-full h-72 sm:h-84 object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-surface-950/20 to-transparent"></div>
 
-                {/* Floating Social Badge on Photo */}
-                <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-white">
-                  <div className="flex items-center gap-3">
+                {/* Social Badge on Photo */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3 bg-white/90 dark:bg-surface-900/90 backdrop-blur-sm rounded-lg px-3 py-2">
                     <div className="flex -space-x-2">
-                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
-                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
-                      <img className="h-9 w-9 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
+                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold">1,200+ Active Members</p>
-                      <p className="text-xs text-surface-300">Across 18+ Departments</p>
+                      <p className="text-xs font-bold text-surface-900 dark:text-surface-100">1,200+ Members</p>
+                      <p className="text-[10px] text-surface-500 dark:text-surface-400">18+ Departments</p>
                     </div>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-semibold">
-                    <i className="fa-solid fa-circle-check text-emerald-400"></i> Active today
                   </div>
                 </div>
               </div>
@@ -249,7 +245,7 @@ export function Home() {
                 key={c.label}
                 className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className={`h-12 w-12 rounded-2xl bg-gradient-to-tr ${c.color} flex items-center justify-center text-white text-lg shadow-sm mb-4`}>
+                <div className={`h-12 w-12 rounded-xl ${c.color} flex items-center justify-center text-white text-lg shadow-sm mb-4`}>
                   <i className={c.icon}></i>
                 </div>
                 <div className="flex items-center justify-between mb-1">
