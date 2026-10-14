@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Logo } from "./Logo";
@@ -13,24 +13,8 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Layout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === "/";
-
-  useEffect(() => {
-    const saved = localStorage.getItem("darkMode");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (saved === "true" || (!saved && prefersDark)) {
-      setDarkMode(true);
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle("dark");
-    localStorage.setItem("darkMode", (!darkMode).toString());
-  };
 
   const navLinks = (
     <>
@@ -75,13 +59,6 @@ export function Layout() {
           <nav className="hidden items-center gap-1 md:flex">{navLinks}</nav>
 
           <div className="hidden items-center gap-3 md:flex">
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-200 text-surface-600 transition-all duration-200 hover:bg-surface-100 hover:border-surface-300 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
-              onClick={toggleDarkMode}
-              aria-label="Toggle dark mode"
-            >
-              <i className={`fa-solid ${darkMode ? "fa-sun" : "fa-moon"} text-sm`}></i>
-            </button>
             {user ? (
               <>
                 <div className="flex items-center gap-2 rounded-lg bg-surface-100 py-1.5 pl-1.5 pr-3 dark:bg-surface-800">
@@ -97,14 +74,9 @@ export function Layout() {
                 </button>
               </>
             ) : (
-              <>
-                <Link to="/login" className="btn-ghost text-sm no-underline">
-                  Log in
-                </Link>
-                <Link to="/register" className="btn-primary px-4 py-2 text-sm no-underline">
-                  Get Started
-                </Link>
-              </>
+              <Link to="/login" className="btn-ghost text-sm no-underline">
+                Log in
+              </Link>
             )}
           </div>
 
@@ -118,43 +90,29 @@ export function Layout() {
           </button>
         </div>
 
-        {open && (
+{open && (
           <nav className="animate-slide-down space-y-1 border-t border-surface-200 bg-white/95 backdrop-blur-sm px-4 py-4 md:hidden dark:bg-surface-950/95 dark:border-surface-800">
-            {navLinks}
-            <div className="mt-3 border-t border-surface-200 pt-3 dark:border-surface-800">
-              <button
-                className="btn-secondary w-full mb-2 text-sm"
-                onClick={() => {
-                  toggleDarkMode();
-                }}
-              >
-                <i className={`fa-solid ${darkMode ? "fa-sun" : "fa-moon"} text-xs mr-2`}></i>
-                {darkMode ? "Light mode" : "Dark mode"}
-              </button>
-              {user ? (
-                <button
-                  className="btn-secondary w-full text-sm"
-                  onClick={() => {
-                    setOpen(false);
-                    void logout();
-                  }}
-                >
-                  <i className="fa-solid fa-right-from-bracket text-xs mr-2"></i>
-                  Log out
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <Link to="/login" className="btn-secondary flex-1 text-sm no-underline" onClick={() => setOpen(false)}>
+              {navLinks}
+              <div className="mt-3 border-t border-surface-200 pt-3 dark:border-surface-800">
+                {user ? (
+                  <button
+                    className="btn-secondary w-full text-sm"
+                    onClick={() => {
+                      setOpen(false);
+                      void logout();
+                    }}
+                  >
+                    <i className="fa-solid fa-right-from-bracket text-xs mr-2"></i>
+                    Log out
+                  </button>
+                ) : (
+                  <Link to="/login" className="btn-secondary w-full text-sm no-underline" onClick={() => setOpen(false)}>
                     Log in
                   </Link>
-                  <Link to="/register" className="btn-primary flex-1 text-sm no-underline" onClick={() => setOpen(false)}>
-                    Get Started
-                  </Link>
-                </div>
-              )}
-            </div>
-          </nav>
-        )}
+                )}
+              </div>
+            </nav>
+          )}
       </header>
 
       <main className={`mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 ${isHome ? "py-0" : "py-8 lg:py-12"}`}>
