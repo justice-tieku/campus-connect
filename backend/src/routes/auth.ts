@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { supabase, supabaseAdmin } from "../lib/supabase";
-import { clearAuthCookie, setAuthCookie } from "../lib/auth";
+import { clearAuthCookie, setAuthCookie, signToken } from "../lib/auth";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { HttpError } from "../lib/httpError";
@@ -29,69 +29,108 @@ const authLimiter = rateLimit({
 });
 
 router.post(
-  "/register",
-  authLimiter,
-  asyncHandler(async (req, res) => {
-    const { email, password, role, firstName, lastName, institution, programme } = credentialsSchema.parse(req.body);
+    "/register",
+    authLimiter,
+    asyncHandler(async (req, res) => {
+      const { email, password, role, firstName, lastName, institution, programme } = credentialsSchema.parse(req.body);
 
-    // Check if user already exists in our database
-    const existingDbUser = await prisma.user.findUnique({
-      where: { email },
-    });
-    if (existingDbUser) {
-      throw new HttpError(400, "An account with this email address already exists. Please log in instead.");
-    }
-
-    // Register with Supabase Admin (bypasses default email rate-limits and auto-confirms email)
-    let authUser: { id: string; email?: string } | null = null;
-
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
+      // Check if user already exists in our database
+      const existingDbUser = await prisma.user.findUnique({
+        where: { email },
       });
 
-      if (adminError) {
-        throw new HttpError(400, adminError.message);
+      // If user exists but has no password (e.g. signed up via Google), allow setting a password
+      if (existingDbUser && !existingDbUser.password) {
+        if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+          const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingDbUser.id, { password });
+          if (updateError) throw new HttpError(400, updateError.message);
+        }
+        const user = await prisma.user.update({
+          where: { id: existingDbUser.id },
+          data: { password, role: role || existingDbUser.role, firstName, lastName, institution, programme },
+          select: { id: true, email: true, role: true },
+        });
+        const token = signToken({ userId: user.id, role: user.role });
+        setAuthCookie(res, { userId: user.id, role: user.role });
+        return res.status(200).json({ user, token });
       }
-      authUser = adminData.user;
-    } else {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (authError) {
-        throw new HttpError(400, authError.message);
+
+      if (existingDbUser) {
+        throw new HttpError(400, "An account with this email address already exists. Please log in instead.");
       }
-      authUser = authData.user;
-    }
 
-    if (!authUser) {
-      throw new HttpError(400, "Failed to create user");
-    }
+      // Register with Supabase Admin (bypasses default email rate-limits and auto-confirms email)
+      let authUser: { id: string; email?: string } | null = null;
 
-    // Create user in our database with Supabase user ID
-    const user = await prisma.user.create({
-      data: {
-        id: authUser.id,
-        email: authUser.email!,
-        password,
-        role: role || "STUDENT",
-        firstName,
-        lastName,
-        institution,
-        programme,
-        profile: { create: {} },
-      },
-      select: { id: true, email: true, role: true },
-    });
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
 
-    const token = signToken({ userId: user.id, role: user.role });
-    setAuthCookie(res, { userId: user.id, role: user.role });
-    res.status(201).json({ user, token });
-  }),
-);
+        if (adminError) {
+          // If user already exists in Supabase Auth, try to update their password instead
+          if (adminError.message.toLowerCase().includes("already") || adminError.message.toLowerCase().includes("exists")) {
+            const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+            if (!listError) {
+              const existingAuthUser = existingUsers.users.find((u) => u.email?.toLowerCase() === email);
+              if (existingAuthUser) {
+                const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingAuthUser.id, { password });
+                if (updateError) throw new HttpError(400, updateError.message);
+                authUser = { id: existingAuthUser.id, email: existingAuthUser.email };
+              }
+            }
+          }
+          if (!authUser) {
+            throw new HttpError(400, adminError.message);
+          }
+        } else {
+          authUser = adminData.user;
+        }
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (authError) {
+          throw new HttpError(400, authError.message);
+        }
+        authUser = authData.user;
+      }
+
+      if (!authUser) {
+        throw new HttpError(400, "Failed to create user");
+      }
+
+      // If the Supabase user already existed (Google signup), update the Prisma record instead of creating a duplicate
+      const existingPrismaUser = await prisma.user.findUnique({ where: { id: authUser.id } });
+      const user = existingPrismaUser
+        ? await prisma.user.update({
+            where: { id: authUser.id },
+            data: { password, role: role || existingPrismaUser.role, firstName, lastName, institution, programme },
+            select: { id: true, email: true, role: true },
+          })
+        : await prisma.user.create({
+            data: {
+              id: authUser.id,
+              email: authUser.email!,
+              password,
+              role: role || "STUDENT",
+              firstName,
+              lastName,
+              institution,
+              programme,
+              profile: { create: {} },
+            },
+            select: { id: true, email: true, role: true },
+          });
+
+      const token = signToken({ userId: user.id, role: user.role });
+      setAuthCookie(res, { userId: user.id, role: user.role });
+      res.status(201).json({ user, token });
+    }),
+  );
 
 router.post(
   "/login",
