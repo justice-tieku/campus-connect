@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Logo } from "./Logo";
 
@@ -13,10 +13,6 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Layout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const location = useLocation();
-  const isAuthPage = ["/login", "/register", "/forgot-password", "/reset-password"].includes(
-    location.pathname
-  );
 
   const navLinks = (
     <>
