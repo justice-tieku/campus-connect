@@ -3,13 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { supabase } from "../lib/supabase";
-import { Logo } from "../components/Logo";
 
 type AccountRole = "STUDENT" | "STAFF" | "ADMIN" | "ALUMNI";
 
 interface RoleOption {
   id: AccountRole;
   label: string;
+  icon: string;
   description: string;
   placeholder: string;
 }
@@ -18,25 +18,29 @@ const ROLES: RoleOption[] = [
   {
     id: "STUDENT",
     label: "Student",
-    description: "For undergraduate and postgraduate students",
+    icon: "school",
+    description: "Undergraduate or postgraduate researcher",
     placeholder: "student@university.edu",
   },
   {
     id: "STAFF",
     label: "Staff",
-    description: "For campus staff and department coordinators",
+    icon: "badge",
+    description: "Campus staff and department coordinator",
     placeholder: "staff@university.edu",
   },
   {
     id: "ADMIN",
     label: "Admin",
-    description: "For platform and institutional administrators",
+    icon: "shield",
+    description: "Campus administrator and platform manager",
     placeholder: "admin@university.edu",
   },
   {
     id: "ALUMNI",
     label: "Alumni",
-    description: "For graduates and alumni mentors",
+    icon: "verified",
+    description: "Graduate and mentor across campuses",
     placeholder: "alumni@university.edu",
   },
 ];
@@ -46,6 +50,7 @@ export function Register() {
   const navigate = useNavigate();
 
   const [activeRole, setActiveRole] = useState<AccountRole | null>("STUDENT");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -81,7 +86,7 @@ export function Register() {
     setError("");
 
     if (!activeRole) {
-      setError("Please select an account type above");
+      setError("Please select an account type");
       return;
     }
 
@@ -101,6 +106,7 @@ export function Register() {
         email: email.trim().toLowerCase(),
         password,
         role: activeRole,
+        firstName: fullName.trim() || undefined,
       });
 
       if (!res || !res.user) {
@@ -117,21 +123,18 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 px-4 bg-surface-50 dark:bg-surface-950">
-      <div className="w-full max-w-md">
-        {/* Brand Header */}
+    <div className="min-h-[85vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6">
+      <div className="w-full max-w-[460px] flex flex-col">
+        {/* Header Section */}
         <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 no-underline mb-3">
-            <Logo size={40} />
-            <span className="font-display text-xl font-bold text-surface-900 dark:text-surface-100">
-              Campus<span className="text-brand-600">Connect</span>
-            </span>
-          </Link>
-          <h1 className="font-display text-2xl font-bold text-surface-900 dark:text-surface-100">
-            Create an Account
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto mb-3">
+            <span className="material-symbols-outlined text-[26px]">hub</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1">
+            Create your account
           </h1>
-          <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">
-            Choose your role to get started
+          <p className="text-sm text-slate-500">
+            Select your account persona to begin
           </p>
         </div>
 
@@ -142,106 +145,135 @@ export function Register() {
             return (
               <div
                 key={role.id}
-                className={`panel overflow-hidden transition-all duration-200 border ${
+                className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden ${
                   isOpen
-                    ? "border-brand-600 ring-1 ring-brand-600/30 dark:border-brand-500"
-                    : "border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700"
+                    ? "border-emerald-600 ring-1 ring-emerald-600/20 shadow-sm"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
-                {/* Role Header Button */}
+                {/* Role Header Card Button */}
                 <button
                   type="button"
                   onClick={() => handleSelectRole(role.id)}
-                  className="w-full p-4 flex items-center justify-between text-left transition-colors bg-white dark:bg-surface-900"
+                  className="w-full p-4 flex items-center justify-between text-left transition-colors bg-white hover:bg-slate-50/50"
                 >
-                  <div>
-                    <span
-                      className={`block text-base font-semibold ${
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                         isOpen
-                          ? "text-brand-600 dark:text-brand-400"
-                          : "text-surface-900 dark:text-surface-100"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
-                      {role.label}
-                    </span>
-                    <span className="block text-xs text-surface-500 dark:text-surface-400 mt-0.5">
-                      {role.description}
-                    </span>
+                      <span className="material-symbols-outlined text-[20px]">
+                        {role.icon}
+                      </span>
+                    </div>
+                    <div>
+                      <span
+                        className={`block text-sm font-semibold ${
+                          isOpen ? "text-emerald-800" : "text-slate-900"
+                        }`}
+                      >
+                        {role.label}
+                      </span>
+                      <span className="block text-xs text-slate-500 mt-0.5">
+                        {role.description}
+                      </span>
+                    </div>
                   </div>
-                  <div
-                    className={`h-7 w-7 rounded-full flex items-center justify-center text-xs transition-transform duration-200 ${
-                      isOpen
-                        ? "bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-400 rotate-90"
-                        : "bg-surface-100 text-surface-400 dark:bg-surface-800 dark:text-surface-500"
+                  <span
+                    className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                      isOpen ? "text-emerald-600 rotate-90" : "text-slate-400"
                     }`}
                   >
-                    ▶
-                  </div>
+                    chevron_right
+                  </span>
                 </button>
 
-                {/* Drop-down Form for Active Role */}
+                {/* Drop-down Form for Selected Role */}
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-2 border-t border-surface-100 dark:border-surface-800/80 bg-surface-50/50 dark:bg-surface-900/50 animate-fade-in">
+                  <div className="px-5 pb-5 pt-2 border-t border-slate-100 bg-slate-50/40">
                     <form className="space-y-3.5" onSubmit={onSubmit}>
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-surface-700 dark:text-surface-300">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor={`name-${role.id}`}>
+                          Full Name
+                        </label>
+                        <input
+                          id={`name-${role.id}`}
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="e.g. Alex Chen"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor={`email-${role.id}`}>
                           {role.label} Email
                         </label>
                         <input
-                          className="input"
+                          id={`email-${role.id}`}
                           type="email"
                           autoComplete="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
                           placeholder={role.placeholder}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
                         />
                       </div>
 
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-surface-700 dark:text-surface-300">
-                          Password
-                        </label>
-                        <input
-                          className="input"
-                          type="password"
-                          autoComplete="new-password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          placeholder="At least 8 characters"
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor={`pwd-${role.id}`}>
+                            Password
+                          </label>
+                          <input
+                            id={`pwd-${role.id}`}
+                            type="password"
+                            autoComplete="new-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            placeholder="Min. 8 chars"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-surface-700 dark:text-surface-300">
-                          Confirm Password
-                        </label>
-                        <input
-                          className="input"
-                          type="password"
-                          autoComplete="new-password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          placeholder="Re-enter password"
-                        />
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor={`confirm-${role.id}`}>
+                            Confirm Password
+                          </label>
+                          <input
+                            id={`confirm-${role.id}`}
+                            type="password"
+                            autoComplete="new-password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            placeholder="Re-enter password"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                          />
+                        </div>
                       </div>
 
                       {error && (
-                        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 p-2.5 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                        <div className="rounded-lg bg-red-50 p-2.5 text-xs text-red-700 border border-red-200">
                           {error}
                         </div>
                       )}
 
                       <button
                         type="submit"
-                        className="btn-primary w-full py-2.5 text-sm font-semibold mt-1"
                         disabled={busy || googleBusy}
+                        className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 mt-1 shadow-sm"
                       >
-                        {busy ? "Creating account…" : `Register as ${role.label}`}
+                        <span>{busy ? "Creating account…" : `Create ${role.label} Account`}</span>
+                        <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                       </button>
                     </form>
                   </div>
@@ -252,13 +284,12 @@ export function Register() {
         </div>
 
         {/* Divider */}
-        <div className="relative my-5 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-surface-200 dark:border-surface-800"></div>
-          </div>
-          <span className="relative bg-surface-50 dark:bg-surface-950 px-3 text-xs uppercase tracking-wider text-surface-400 font-semibold">
-            Or continue with
+        <div className="relative my-6 flex items-center">
+          <div className="flex-grow border-t border-slate-200"></div>
+          <span className="flex-shrink mx-3 text-xs uppercase tracking-wider text-slate-400 bg-transparent px-2">
+            or continue with
           </span>
+          <div className="flex-grow border-t border-slate-200"></div>
         </div>
 
         {/* Google Sign In Button */}
@@ -266,13 +297,10 @@ export function Register() {
           type="button"
           onClick={handleGoogleRegister}
           disabled={busy || googleBusy}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-surface-300 dark:border-surface-700 bg-white dark:bg-surface-900 text-surface-800 dark:text-surface-100 font-semibold text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-all shadow-sm"
+          className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50"
         >
           {googleBusy ? (
-            <>
-              <i className="fa-solid fa-circle-notch fa-spin text-sm"></i>
-              <span>Connecting to Google…</span>
-            </>
+            <span className="text-xs text-slate-500">Connecting to Google…</span>
           ) : (
             <>
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -286,15 +314,15 @@ export function Register() {
           )}
         </button>
 
-        {/* Footer Link to Login */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-surface-500 dark:text-surface-400">
+        {/* Footer Redirect to Login */}
+        <div className="text-center mt-5">
+          <p className="text-sm text-slate-500">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
+              className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline no-underline"
             >
-              Sign in
+              Sign In
             </Link>
           </p>
         </div>

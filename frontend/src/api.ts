@@ -84,6 +84,24 @@ export function setStoredToken(token: string | null) {
   }
 }
 
+export function getStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem("cc_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: User | null) {
+  if (user) {
+    localStorage.setItem("cc_user", JSON.stringify(user));
+  } else {
+    localStorage.removeItem("cc_user");
+  }
+}
+
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) {
@@ -133,6 +151,9 @@ export const api = {
     if (res.token) {
       setStoredToken(res.token);
     }
+    if (res.user) {
+      setStoredUser(res.user);
+    }
     return res;
   },
   login: async (email: string, password: string) => {
@@ -143,6 +164,9 @@ export const api = {
     if (res.token) {
       setStoredToken(res.token);
     }
+    if (res.user) {
+      setStoredUser(res.user);
+    }
     return res;
   },
   syncOAuth: async (user: { id: string; email: string }) => {
@@ -152,6 +176,9 @@ export const api = {
     });
     if (res.token) {
       setStoredToken(res.token);
+    }
+    if (res.user) {
+      setStoredUser(res.user);
     }
     return res;
   },

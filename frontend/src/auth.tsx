@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "./api";
-import { api, setStoredToken } from "./api";
+import { api, getStoredUser, setStoredToken, setStoredUser } from "./api";
 import { supabase } from "./lib/supabase";
 
 type AuthContextValue = {
@@ -13,14 +13,20 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => getStoredUser());
+  const [loading, setLoading] = useState(false);
 
   async function refresh() {
     try {
       const data = await api.me();
-      setUser(data.user);
+      if (data?.user) {
+        setUser(data.user);
+        setStoredUser(data.user);
+      }
     } catch {
+      // If token expired or invalid
+      setStoredUser(null);
+      setStoredToken(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -28,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Check our backend session (stored token or cookie)
+    // Initial verification
     void refresh();
 
     // Listen for Supabase auth state changes (e.g. Google OAuth redirect)
@@ -37,12 +43,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user?.email) {
         try {
-          await api.syncOAuth({
+          const res = await api.syncOAuth({
             id: session.user.id,
             email: session.user.email,
           });
+          if (res?.user) {
+            setUser(res.user);
+            setStoredUser(res.user);
+          }
         } catch (err) {
           console.warn("OAuth sync error:", err);
+          // Fast-track user state from Supabase session
+          const fallbackUser: User = {
+            id: session.user.id,
+            email: session.user.email,
+            role: "STUDENT",
+            createdAt: new Date().toISOString(),
+          };
+          setUser(fallbackUser);
+          setStoredUser(fallbackUser);
         }
         await refresh();
       }
@@ -64,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await api.logout();
         } catch (_) {}
         setStoredToken(null);
+        setStoredUser(null);
         setUser(null);
       },
     }),

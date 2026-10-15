@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { supabase } from "../lib/supabase";
-import { Logo } from "../components/Logo";
 
 export function Login() {
   const { refresh } = useAuth();
@@ -14,6 +13,7 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
@@ -56,94 +56,111 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-10 px-4 bg-surface-50 dark:bg-surface-950">
-      <div className="w-full max-w-md">
-        {/* Brand Header */}
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 no-underline mb-3">
-            <Logo size={40} />
-            <span className="font-display text-xl font-bold text-surface-900 dark:text-surface-100">
-              Campus<span className="text-brand-600">Connect</span>
-            </span>
-          </Link>
-          <h1 className="font-display text-2xl font-bold text-surface-900 dark:text-surface-100">
-            Welcome back
-          </h1>
-          <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">
-            Sign in with your email and password
-          </p>
+    <div className="min-h-[85vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6">
+      <div className="w-full max-w-[420px] flex flex-col">
+        {/* Card Container with Hairline Border and Zero Gradient */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.04)]">
+          {/* Header Section inside card */}
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
+              <span className="material-symbols-outlined text-[26px]">account_balance</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1">
+              Welcome back
+            </h1>
+            <p className="text-sm text-slate-500">
+              Log in with your university credentials
+            </p>
+          </div>
 
           {message && (
-            <div className="mt-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-              {message}
+            <div className="mb-4 rounded-lg bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 border border-emerald-200 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              <span>{message}</span>
             </div>
           )}
-        </div>
 
-        {/* Card Form */}
-        <div className="panel p-6 shadow-sm dark:shadow-none">
+          {/* Form */}
           <form className="space-y-4" onSubmit={onSubmit}>
+            {/* Email Input */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-                Email
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="email">
+                University Email
               </label>
               <input
-                className="input"
+                id="email"
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="name@university.edu"
+                placeholder="student@university.edu"
+                className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
               />
             </div>
 
+            {/* Password Input */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300">
+                <label className="block text-xs font-semibold text-slate-700" htmlFor="password">
                   Password
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
+                  className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline no-underline"
                 >
                   Forgot password?
                 </Link>
               </div>
-              <input
-                className="input"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-              />
+              <div className="relative flex items-center">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••••••"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                />
+                <button
+                  type="button"
+                  aria-label="Toggle password visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
             </div>
 
+            {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+              <div className="rounded-lg bg-red-50 p-2.5 text-xs text-red-700 border border-red-200">
                 {error}
               </div>
             )}
 
+            {/* Submit Button */}
             <button
               type="submit"
-              className="btn-primary w-full py-2.5 text-sm font-semibold"
               disabled={busy || googleBusy}
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
             >
-              {busy ? "Signing in…" : "Sign in"}
+              <span>{busy ? "Signing in…" : "Sign In"}</span>
+              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </form>
 
           {/* Divider */}
-          <div className="relative my-5 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-surface-200 dark:border-surface-800"></div>
-            </div>
-            <span className="relative bg-white dark:bg-surface-900 px-3 text-xs uppercase tracking-wider text-surface-400 font-semibold">
-              Or continue with
+          <div className="relative my-5 flex items-center">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-3 text-xs uppercase tracking-wider text-slate-400 bg-white px-2">
+              or continue with
             </span>
+            <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
           {/* Google Sign In Button */}
@@ -151,13 +168,10 @@ export function Login() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={busy || googleBusy}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-surface-300 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-100 font-semibold text-sm hover:bg-surface-50 dark:hover:bg-surface-700/80 transition-all shadow-sm"
+            className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50"
           >
             {googleBusy ? (
-              <>
-                <i className="fa-solid fa-circle-notch fa-spin text-sm"></i>
-                <span>Connecting to Google…</span>
-              </>
+              <span className="text-xs text-slate-500">Connecting to Google…</span>
             ) : (
               <>
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -171,17 +185,26 @@ export function Login() {
             )}
           </button>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              Don't have an account?{" "}
-              <Link
-                to="/register"
-                className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
-              >
-                Create account
-              </Link>
+          {/* Academic Network Notice */}
+          <div className="mt-5 pt-4 border-t border-slate-100 flex items-start gap-2 text-slate-500">
+            <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5 shrink-0">verified_user</span>
+            <p className="text-xs leading-relaxed">
+              Authorized students, university staff, and alumni may authenticate directly.
             </p>
           </div>
+        </div>
+
+        {/* Bottom Sign-up Redirect */}
+        <div className="text-center mt-5">
+          <p className="text-sm text-slate-500">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline no-underline"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>
