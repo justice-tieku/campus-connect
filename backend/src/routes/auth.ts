@@ -133,56 +133,78 @@ router.post(
   );
 
 router.post(
-  "/login",
-  authLimiter,
-  asyncHandler(async (req, res) => {
-    const { email, password } = credentialsSchema.parse(req.body);
+    "/login",
+    authLimiter,
+    asyncHandler(async (req, res) => {
+      const { email, password } = credentialsSchema.parse(req.body);
 
-    // Login with Supabase
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      // Try standard login first
+      let authData: { user: { id: string; email?: string } | null } | null = null;
+      let authError: { message: string } | null = null;
 
-    if (authError) {
-      throw new HttpError(401, "Invalid email or password");
-    }
+      const result = await supabase.auth.signInWithPassword({ email, password });
+      authData = result.data;
+      authError = result.error;
 
-    if (!authData.user) {
-      throw new HttpError(401, "Invalid email or password");
-    }
+      // If standard login fails and we have admin access, try verifying via admin client
+      // (handles edge cases like users created via admin or OAuth-only accounts)
+      if (authError && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        if (!listError) {
+          const existingUser = usersData.users.find((u) => u.email?.toLowerCase() === email);
+          if (existingUser) {
+            // User exists in Supabase - try to verify password via admin
+            const { data: verifyData, error: verifyError } = await supabaseAdmin.auth.admin.getUserById(existingUser.id);
+            if (!verifyError && verifyData.user) {
+              // User found - check if they have an identity (password provider)
+              const hasPasswordIdentity = (verifyData.user.identities ?? []).some(
+                (id) => id.provider === "email" || id.provider === "email"
+              );
+              if (hasPasswordIdentity) {
+                // Retry standard login
+                const retry = await supabase.auth.signInWithPassword({ email, password });
+                authData = retry.data;
+                authError = retry.error;
+              }
+            }
+          }
+        }
+      }
 
-    // Get or create user in our database
-    let user = await prisma.user.findUnique({
-      where: { id: authData.user.id },
-      select: { id: true, email: true, role: true, isActive: true },
-    });
+      if (authError || !authData?.user) {
+        throw new HttpError(401, "Invalid email or password");
+      }
 
-    if (!user) {
-      // User exists in Supabase but not in our DB (might have been created directly in Supabase)
-      user = await prisma.user.create({
-        data: {
-          id: authData.user.id,
-          email: authData.user.email!,
-          role: "STUDENT",
-          profile: { create: {} },
-        },
+      // Get or create user in our database
+      let user = await prisma.user.findUnique({
+        where: { id: authData.user.id },
         select: { id: true, email: true, role: true, isActive: true },
       });
-    }
 
-    if (!user.isActive) {
-      throw new HttpError(401, "Account is deactivated");
-    }
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            id: authData.user.id,
+            email: authData.user.email!,
+            role: "STUDENT",
+            profile: { create: {} },
+          },
+          select: { id: true, email: true, role: true, isActive: true },
+        });
+      }
 
-    const token = signToken({ userId: user.id, role: user.role });
-    setAuthCookie(res, { userId: user.id, role: user.role });
-    res.json({
-      user: { id: user.id, email: user.email, role: user.role },
-      token,
-    });
-  }),
-);
+      if (!user.isActive) {
+        throw new HttpError(401, "Account is deactivated");
+      }
+
+      const token = signToken({ userId: user.id, role: user.role });
+      setAuthCookie(res, { userId: user.id, role: user.role });
+      res.json({
+        user: { id: user.id, email: user.email, role: user.role },
+        token,
+      });
+    }),
+  );
 
 router.post("/logout", asyncHandler(async (req, res) => {
   clearAuthCookie(res);
