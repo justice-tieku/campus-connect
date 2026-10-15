@@ -1,290 +1,312 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
-import { Logo } from "../components/Logo";
-
-const categories = [
-  { label: "Students", count: "850+", icon: "fa-solid fa-graduation-cap", color: "bg-blue-600", desc: "Build teams, find mentors & projects" },
-  { label: "Faculty", count: "120+", icon: "fa-solid fa-chalkboard-user", color: "bg-purple-600", desc: "Supervise research & post open labs" },
-  { label: "Alumni", count: "340+", icon: "fa-solid fa-user-tie", color: "bg-emerald-600", desc: "Offer internships & guide projects" },
-  { label: "Staff", count: "60+", icon: "fa-solid fa-building-user", color: "bg-amber-600", desc: "Campus updates & resource boards" },
-];
-
-const highlights = [
-  {
-    icon: "fa-solid fa-layer-group",
-    title: "Curated Project Matching",
-    desc: "Match with teammates based on verified skills, departments, and mutual goals.",
-  },
-  {
-    icon: "fa-solid fa-briefcase",
-    title: "Direct Campus Opportunities",
-    desc: "Discover internships, research grants, and campus hackathons directly from your university.",
-  },
-  {
-    icon: "fa-solid fa-shield-halved",
-    title: "Verified Community",
-    desc: "Authentic university network monitored by staff and faculty for safe collaboration.",
-  },
-];
 
 export function Home() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"student" | "faculty">("student");
 
   return (
-    <div className="animate-fade-in -mt-4 pb-20">
-
-      {/* ─── Hero: Human Photography on one side, Portal/Actions on the other ─── */}
-      <section className="relative overflow-hidden pt-6 pb-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
-
-            {/* Left Column (7 cols): Heading, Value Proposition & Real Student Imagery */}
-            <div className="lg:col-span-7 flex flex-col justify-center space-y-8">
+    <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-surface-container-high selection:text-primary">
+      {/* Hero Section: Clean Editorial Stance */}
+      <section className="border-b border-surface-container-highest bg-surface-container-lowest relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
+          <img src="https://lh3.googleusercontent.com/aida/AEtjO1URfuUpRIMPbhnyTZrdF5IBIePxtT3R06vrvbgbCDlbzZCoyWerbveFTpEdmpho_XTJDZy3UhttY-y2CD4Vl1pglJ1nY9YRApodwa8MtNqLbctx60MD0051iGek_7pbg_1RFbUgiwf1lSz7JmofYcatM9SsogzlXW6yoJpOSs1QmHJNI3H0kfeovSMf8dKBLaphZMbmGcY3PoVdDO67VC6TcDvUm-2KVQuhEDF4fpqdsumMWavoj1Dz0T4" alt="Black and white students collaborating in university library" className="w-full h-full object-cover" style={{ opacity: 0.25 }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-container-lowest/60 to-surface-container-lowest" />
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-surface-container-low border border-outline-variant rounded font-label-sm text-label-sm text-primary uppercase mb-6 tracking-wide" style={{ color: 'rgb(5, 150, 105)', borderColor: 'rgb(5, 150, 105)' }}>
+              <span className="w-1.5 h-1.5 bg-primary-container rounded-full" style={{ backgroundColor: 'rgb(5, 150, 105)' }}></span>
+              University Verified Network
+            </div>
+            <h1 className="font-headline-xl text-headline-xl sm:text-[44px] sm:leading-[52px] text-on-surface font-bold tracking-tight mb-6">
+              Where student developers collaborate on real projects
+            </h1>
+            <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl leading-relaxed">
+              Connect across computer science departments. Build production-grade software, find technical peers with complementary stacks, and replace simulated homework with peer-reviewed open code.
+            </p>
+            {/* CTA Row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-16">
+              {user ? (
+                <Link to="/projects" className="flex items-center justify-center gap-2 bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded transition-colors duration-150" style={{ backgroundColor: 'rgb(5, 150, 105)', color: 'rgb(255, 255, 255)' }}>
+                  Go to Projects
+                  <span className="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="flex items-center justify-center gap-2 bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded transition-colors duration-150" style={{ backgroundColor: 'rgb(5, 150, 105)', color: 'rgb(255, 255, 255)' }}>
+                    Log in
+                  </Link>
+                  <Link to="/register" className="flex items-center justify-center gap-2 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface border border-outline-variant font-label-md text-label-md px-6 py-3 rounded transition-colors duration-150">
+                    Join Campus Connect
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+          {/* Minimal Metrics Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-surface-container-highest border border-surface-container-highest rounded overflow-hidden">
+            <div className="bg-surface-container-lowest p-6">
+              <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-1">Active Developers</p>
+              <div className="font-headline-lg text-headline-lg text-on-surface font-bold">12,480+</div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Verified with .edu domain</p>
+            </div>
+            <div className="bg-surface-container-lowest p-6">
+              <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-1">Partner Institutions</p>
+              <div className="font-headline-lg text-headline-lg text-on-surface font-bold">450+</div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Departments and student labs</p>
+            </div>
+            <div className="bg-surface-container-lowest p-6">
+              <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-1">Shipped Repositories</p>
+              <div className="font-headline-lg text-headline-lg text-on-surface font-bold">1,820+</div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Live in production this semester</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Editorial Section: How It Works */}
+      <section className="py-16 sm:py-20 border-b border-surface-container-highest bg-surface-bright" id="how-it-works">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mb-12">
+            <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-2">Architected for production, not resumes</h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">Three methodical steps to find a team and ship resilient code.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Step 1 */}
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded p-6 flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50/80 px-4 py-1.5 text-xs font-semibold text-brand-700 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-300">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Verified University Network
+                <div className="w-8 h-8 rounded bg-surface-container-low border border-outline-variant flex items-center justify-center font-label-md text-primary font-bold mb-4" style={{ color: 'rgb(5, 150, 105)' }}>
+                  01
                 </div>
-                <h1 className="mt-5 font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-surface-900 dark:text-surface-100 leading-[1.12]">
-                  Where ambitious <br className="hidden sm:inline" />
-                  <span className="text-brand-600">
-                    campus minds connect
-                  </span>{" "}
-                  &amp; build.
-                </h1>
-                <p className="mt-4 text-base sm:text-lg text-surface-600 dark:text-surface-300 max-w-xl leading-relaxed">
-                  Join students, professors, and alumni collaborating on innovative projects, sharing department resources, and discovering vetted career opportunities.
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">Publish Project Blueprint</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Specify your tech stack, system architecture requirements, and precise engineering roles missing from your squad.
                 </p>
               </div>
-
-              {/* Realistic High-Quality Student Collaboration Photography */}
-              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900 group">
-                <img
-                  src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80"
-                  alt="University students collaborating together"
-                  className="w-full h-72 sm:h-84 object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                />
-
-                {/* Social Badge on Photo */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3 bg-white/90 dark:bg-surface-900/90 backdrop-blur-sm rounded-lg px-3 py-2">
-                    <div className="flex -space-x-2">
-                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
-                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
-                      <img className="h-8 w-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80" alt="Student avatar" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-surface-900 dark:text-surface-100">1,200+ Members</p>
-                      <p className="text-[10px] text-surface-500 dark:text-surface-400">18+ Departments</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick statistics row */}
-              <div className="grid grid-cols-3 gap-4 border-t border-surface-200 dark:border-surface-800 pt-6">
-                <div>
-                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">140+</p>
-                  <p className="text-xs sm:text-sm text-surface-500">Live projects</p>
-                </div>
-                <div>
-                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">95%</p>
-                  <p className="text-xs sm:text-sm text-surface-500">Placement rate</p>
-                </div>
-                <div>
-                  <p className="font-display text-2xl sm:text-3xl font-extrabold text-surface-900 dark:text-surface-100">50+</p>
-                  <p className="text-xs sm:text-sm text-surface-500">Partner companies</p>
-                </div>
+              <div className="mt-6 pt-4 border-t border-surface-container-high flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase">
+                <span className="material-symbols-outlined text-[16px]" data-icon="terminal">terminal</span>
+                Stack declaration
               </div>
             </div>
-
-            {/* Right Column (5 cols): Interactive Auth & Direct Portal Card */}
-            <div className="lg:col-span-5">
-              <div className="relative rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-6 sm:p-8 shadow-xl">
-                
-                {/* Header branding on card */}
-                <div className="flex items-center gap-3 pb-6 border-b border-surface-100 dark:border-surface-800">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600">
-                    <Logo size={32} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-lg font-bold text-surface-900 dark:text-surface-100">
-                      Campus Portal
-                    </h3>
-                    <p className="text-xs text-surface-500">
-                      {user ? `Logged in as ${user.email}` : "Select how you would like to enter"}
-                    </p>
-                  </div>
+            {/* Step 2 */}
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded p-6 flex flex-col justify-between">
+              <div>
+                <div className="w-8 h-8 rounded bg-surface-container-low border border-outline-variant flex items-center justify-center font-label-md text-primary font-bold mb-4" style={{ color: 'rgb(5, 150, 105)' }}>
+                  02
                 </div>
-
-                {user ? (
-                  /* User is authenticated view */
-                  <div className="mt-6 space-y-4">
-                    <div className="rounded-2xl bg-surface-50 dark:bg-surface-800/60 p-4 border border-surface-200/60 dark:border-surface-700">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white font-bold">
-                          {user.email.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 truncate">
-                          <p className="text-sm font-bold text-surface-900 dark:text-surface-100 truncate">{user.email}</p>
-                          <span className="badge badge-brand text-[10px] mt-0.5">{user.role}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <Link to="/projects" className="btn-primary py-3 rounded-xl no-underline text-center">
-                        <i className="fa-solid fa-folder-open text-xs mr-2"></i>
-                        Projects
-                      </Link>
-                      <Link to="/profile" className="btn-secondary py-3 rounded-xl no-underline text-center">
-                        <i className="fa-solid fa-user text-xs mr-2"></i>
-                        Profile
-                      </Link>
-                    </div>
-
-                    <Link to="/opportunities" className="block w-full py-2.5 text-center text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">
-                      Explore Open Opportunities &rarr;
-                    </Link>
-                  </div>
-                ) : (
-                  /* Guest view: Action-oriented Register & Login portal */
-                  <div className="mt-6 space-y-5">
-                    {/* Role tabs */}
-                    <div className="flex rounded-xl bg-surface-100 dark:bg-surface-800 p-1">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("student")}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                          activeTab === "student"
-                            ? "bg-white dark:bg-surface-900 text-brand-600 shadow-sm"
-                            : "text-surface-600 dark:text-surface-400"
-                        }`}
-                      >
-                        <i className="fa-solid fa-user-graduate mr-1.5"></i> Student / Alumni
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("faculty")}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                          activeTab === "faculty"
-                            ? "bg-white dark:bg-surface-900 text-brand-600 shadow-sm"
-                            : "text-surface-600 dark:text-surface-400"
-                        }`}
-                      >
-                        <i className="fa-solid fa-chalkboard-user mr-1.5"></i> Faculty / Staff
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-surface-500 leading-relaxed">
-                      {activeTab === "student"
-                        ? "Register with your student email to join project squads, showcase portfolios, and browse internships."
-                        : "Connect with students for academic research, post department news, and supervise student initiatives."}
-                    </p>
-
-                    {/* Primary Portal CTAs */}
-                    <div className="space-y-3 pt-1">
-                      <Link
-                        to="/register"
-                        className="btn-primary w-full py-3.5 text-sm font-bold rounded-2xl no-underline flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
-                      >
-                        <span>Create Free Account</span>
-                        <i className="fa-solid fa-arrow-right text-xs"></i>
-                      </Link>
-
-                      <Link
-                        to="/login"
-                        className="btn-secondary w-full py-3.5 text-sm font-semibold rounded-2xl no-underline flex items-center justify-center gap-2"
-                      >
-                        <i className="fa-solid fa-right-to-bracket text-xs text-surface-400"></i>
-                        <span>Sign In to Existing Account</span>
-                      </Link>
-                    </div>
-
-                    <div className="pt-2 text-center">
-                      <Link
-                        to="/forgot-password"
-                        className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 no-underline"
-                      >
-                        Forgot your password? Reset now
-                      </Link>
-                    </div>
-
-                    {/* Trust badges */}
-                    <div className="pt-4 border-t border-surface-100 dark:border-surface-800 flex items-center justify-center gap-4 text-xs text-surface-400">
-                      <span><i className="fa-solid fa-lock mr-1 text-emerald-500"></i> Secure SSO</span>
-                      <span>&bull;</span>
-                      <span><i className="fa-solid fa-check mr-1 text-brand-500"></i> Free for Campus</span>
-                    </div>
-                  </div>
-                )}
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">Direct Skill Match</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Filter peers by verified campus department, GitHub profile proof, and specific domain proficiencies like distributed systems.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-surface-container-high flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase">
+                <span className="material-symbols-outlined text-[16px]" data-icon="verified">verified</span>
+                Peer authentication
               </div>
             </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Community Section: Who is on CampusConnect ─── */}
-      <section className="py-12 bg-surface-100/60 dark:bg-surface-900/40 border-y border-surface-200 dark:border-surface-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-100">
-              Built for every role on campus
-            </h2>
-            <p className="mt-2 text-sm text-surface-500">
-              One central network bridging student initiatives, academic leadership, and alumni networks.
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((c) => (
-              <div
-                key={c.label}
-                className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className={`h-12 w-12 rounded-xl ${c.color} flex items-center justify-center text-white text-lg shadow-sm mb-4`}>
-                  <i className={c.icon}></i>
+            {/* Step 3 */}
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded p-6 flex flex-col justify-between">
+              <div>
+                <div className="w-8 h-8 rounded bg-surface-container-low border border-outline-variant flex items-center justify-center font-label-md text-primary font-bold mb-4" style={{ color: 'rgb(5, 150, 105)' }}>
+                  03
                 </div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-display text-base font-bold text-surface-900 dark:text-surface-100">{c.label}</h3>
-                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">{c.count}</span>
-                </div>
-                <p className="text-xs text-surface-500 dark:text-surface-400 leading-relaxed mt-2">{c.desc}</p>
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">Deploy &amp; Showcase</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Publish commits, integrate CI/CD workflows, and generate department-recognized project transcripts for industry recruiters.
+                </p>
               </div>
-            ))}
+              <div className="mt-6 pt-4 border-t border-surface-container-high flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase">
+                <span className="material-symbols-outlined text-[16px]" data-icon="deployed_code">deployed_code</span>
+                Verified delivery
+              </div>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* ─── Platform Features ─── */}
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-8 lg:grid-cols-3">
-            {highlights.map((h) => (
-              <div
-                key={h.title}
-                className="rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-8 shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-900/30 text-brand-600 mb-6">
-                    <i className={`${h.icon} text-lg`}></i>
-                  </div>
-                  <h3 className="font-display text-lg font-bold text-surface-900 dark:text-surface-100 mb-2">
-                    {h.title}
-                  </h3>
-                  <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
-                    {h.desc}
-                  </p>
+      {/* Bento Project Showcase */}
+      <section className="py-16 sm:py-24 border-b border-surface-container-highest bg-surface-container-lowest" id="projects">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+            <div>
+              <span className="font-label-sm text-label-sm text-primary uppercase tracking-wider block mb-1" style={{ color: 'rgb(5, 150, 105)' }}>Live Repositories</span>
+              <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">Featured Student Workspaces</h2>
+            </div>
+            <div className="flex items-center gap-2 border border-outline-variant rounded p-1 bg-surface-container-low self-start">
+              <button className="px-3 py-1 text-primary bg-surface-container-lowest rounded font-label-sm text-label-sm font-semibold border border-outline-variant" style={{ color: 'rgb(5, 150, 105)', borderColor: 'rgb(5, 150, 105)' }}>All Systems</button>
+              <button className="px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-sm text-label-sm">Machine Learning</button>
+              <button className="px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-sm text-label-sm">Cloud Infrastructure</button>
+            </div>
+          </div>
+          {/* Bento Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Large Card: Main Project */}
+            <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant rounded p-6 sm:p-8 flex flex-col justify-between hover:border-outline transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-secondary font-label-sm text-label-sm rounded font-medium">
+                    <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                    Recruiting 2 Contributors
+                  </span>
+                  <span className="font-label-sm text-label-sm text-outline">UC Berkeley &times; Stanford</span>
+                </div>
+                <h3 className="font-headline-md text-headline-md text-on-surface font-bold mb-3">
+                  HyperKernel: Lightweight Microkernel for Edge Sensors
+                </h3>
+                <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+                  An open-source POSIX-compatible research kernel optimized for RISC-V development boards with under 64KB RAM. Benchmarked against real-time automotive sensors with zero-allocation schedulers.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-8">
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Rust</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">RISC-V</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">C11</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">QEMU</span>
                 </div>
               </div>
-            ))}
+              <div className="flex items-center justify-between pt-4 border-t border-surface-container-high">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm flex items-center justify-center">J</div>
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">Lead: Julian Cheng (Systems Lab)</span>
+                </div>
+                <a className="font-label-md text-label-md text-primary-container hover:text-primary flex items-center gap-1 font-semibold" href="#">
+                  View Specs
+                  <span className="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+                </a>
+              </div>
+            </div>
+            {/* Project Card 2 */}
+            <div className="bg-surface-container-lowest border border-outline-variant rounded p-6 flex flex-col justify-between hover:border-outline transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm rounded font-medium border border-outline-variant">
+                    Full Team
+                  </span>
+                  <span className="font-label-sm text-label-sm text-outline">CMU</span>
+                </div>
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">
+                  SynapseQuery: Distributed Vector Index
+                </h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
+                  High-recall approximate nearest neighbor search library written in Go with raft-based replication.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Go</span>
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">gRPC</span>
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Raft</span>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-surface-container-high flex items-center justify-between">
+                <span className="font-body-sm text-body-sm text-outline">18 stars</span>
+                <a className="font-label-sm text-label-sm text-primary hover:underline" href="#">Repository</a>
+              </div>
+            </div>
+            {/* Project Card 3 */}
+            <div className="bg-surface-container-lowest border border-outline-variant rounded p-6 flex flex-col justify-between hover:border-outline transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-secondary font-label-sm text-label-sm rounded font-medium">
+                    1 Role Open
+                  </span>
+                  <span className="font-label-sm text-label-sm text-outline">MIT CSAIL</span>
+                </div>
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">
+                  MedScan-Vision
+                </h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
+                  Self-supervised transformer model identifying thoracic anomalies from anonymized hospital DICOM scans.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Python</span>
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">PyTorch</span>
+                  <span className="px-2 py-0.5 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">CUDA</span>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-surface-container-high flex items-center justify-between">
+                <span className="font-body-sm text-body-sm text-outline">Seeking: PyTorch Eng</span>
+                <a className="font-label-sm text-label-sm text-primary hover:underline" href="#">Apply</a>
+              </div>
+            </div>
+            {/* Project Card 4 */}
+            <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant rounded p-6 sm:p-8 flex flex-col justify-between hover:border-outline transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-secondary font-label-sm text-label-sm rounded font-medium">
+                    3 Open Roles
+                  </span>
+                  <span className="font-label-sm text-label-sm text-outline">UT Austin</span>
+                </div>
+                <h3 className="font-headline-md text-headline-md text-on-surface font-bold mb-3">
+                  CampusFlow: Autonomous Shuttle Transit Tracker
+                </h3>
+                <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+                  Real-time GTFS-RT feed aggregator and React Native client built for 50,000+ daily commuter students. Features offline mesh sync between buses via low-energy Bluetooth relays.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">React Native</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Node.js</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">PostgreSQL</span>
+                  <span className="px-2.5 py-1 bg-surface-container-low text-on-surface border border-outline-variant rounded font-label-sm text-label-sm">Redis</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-surface-container-high">
+                <div className="flex items-center gap-2">
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">Looking for Frontend &amp; Geodata contributors</span>
+                </div>
+                <a className="font-label-md text-label-md text-primary-container hover:text-primary flex items-center gap-1 font-semibold" href="#">
+                  View Specs
+                  <span className="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
-
+      {/* Community & University Trust Rail */}
+      <section className="py-16 border-b border-surface-container-highest bg-surface-bright" id="community">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-1">Adopted Across Premier Engineering Faculties</h2>
+            <p className="font-body-sm text-body-sm text-outline">Students from top departments run capstone projects on Campus Connect</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 text-center">
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              MIT CSAIL
+            </div>
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              Stanford CS
+            </div>
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              UC Berkeley EECS
+            </div>
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              CMU SCS
+            </div>
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              UT Austin ECE
+            </div>
+            <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded font-label-md text-label-md text-on-surface-variant font-semibold">
+              Waterloo SE
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Minimal Signup Banner */}
+      <section className="py-16 sm:py-20 bg-surface-container-lowest border-b border-surface-container-highest" id="auth">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight mb-4">
+            Ready to start building?
+          </h2>
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-lg mx-auto mb-8">
+            Join over 12,000 university students constructing peer-reviewed open source tools. Instant verification via .edu email.
+          </p>
+          <form className="max-w-md mx-auto flex flex-col sm:flex-row gap-2">
+            <input className="flex-1 px-4 py-2.5 bg-surface-container-lowest text-on-surface border border-outline-variant rounded font-body-md text-body-md focus:outline-none focus:border-primary-container" placeholder="your.name@university.edu" required type="email" />
+            <button className="bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md px-5 py-2.5 rounded transition-colors duration-150 font-medium whitespace-nowrap" type="submit" style={{ backgroundColor: 'rgb(5, 150, 105)', color: 'rgb(255, 255, 255)' }}>
+              Get Started
+            </button>
+          </form>
+          <p className="font-body-sm text-body-sm text-outline mt-3">Free and open for all enrolled students &amp; faculty mentors.</p>
+        </div>
+      </section>
     </div>
   );
 }

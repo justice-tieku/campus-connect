@@ -4,15 +4,20 @@ interface LogoProps {
 }
 
 export function Logo({ size = 32, className = "" }: LogoProps) {
+  const logoSize = size || 32;
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div
         className="flex items-center justify-center rounded font-bold text-white text-xs"
-        style={{ width: size, height: size, backgroundColor: "#006c4a" }}
+        style={{ 
+          width: logoSize, 
+          height: logoSize, 
+          backgroundColor: 'rgb(5, 150, 105)' 
+        }}
       >
         C
       </div>
-      <span className="font-bold tracking-tight text-on-surface" style={{ fontSize: size * 0.5 }}>
+      <span className="font-bold tracking-tight text-on-surface" style={{ fontSize: logoSize * 0.5 }}>
         Campus Connect
       </span>
     </div>
