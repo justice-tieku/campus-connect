@@ -17,27 +17,24 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-surface-950 transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${
         fade ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      <div className="flex flex-col items-center gap-6 animate-pulse">
-        <div className="relative">
-          <div className="absolute -inset-4 rounded-full bg-brand-500/20 blur-xl"></div>
-          <Logo size={88} className="relative drop-shadow-lg" />
-        </div>
+      <div className="flex flex-col items-center gap-4 animate-fade-in">
+        <Logo size={56} showText={false} className="drop-shadow-sm" />
         <div className="text-center">
-          <h1 className="font-display text-3xl font-extrabold tracking-tight text-surface-900 dark:text-surface-100">
-            Campus<span className="text-brand-600">Connect</span>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            Campus<span className="text-emerald-600">Connect</span>
           </h1>
-          <p className="mt-2 text-sm font-medium text-surface-500 dark:text-surface-400">
-            Connecting students, faculty & campus builders
+          <p className="mt-1 text-xs text-slate-500">
+            University Collaborative Workspace
           </p>
         </div>
       </div>
-      <div className="absolute bottom-10 flex items-center gap-2 text-xs text-surface-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-brand-600 animate-ping"></span>
-        Loading your campus experience…
+      <div className="absolute bottom-8 flex items-center gap-2 text-xs text-slate-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+        Loading your workspace…
       </div>
     </div>
   );

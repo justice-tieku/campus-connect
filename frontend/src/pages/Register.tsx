@@ -29,20 +29,6 @@ const ROLES: RoleOption[] = [
     description: "Campus staff and department coordinator",
     placeholder: "staff@university.edu",
   },
-  {
-    id: "ADMIN",
-    label: "Admin",
-    icon: "shield",
-    description: "Campus administrator and platform manager",
-    placeholder: "admin@university.edu",
-  },
-  {
-    id: "ALUMNI",
-    label: "Alumni",
-    icon: "verified",
-    description: "Graduate and mentor across campuses",
-    placeholder: "alumni@university.edu",
-  },
 ];
 
 export function Register() {
