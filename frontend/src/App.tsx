@@ -8,6 +8,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
+import { Onboarding } from "./pages/Onboarding";
 import { Opportunities } from "./pages/Opportunities";
 import { Profile } from "./pages/Profile";
 import { ProjectDetail } from "./pages/ProjectDetail";
@@ -15,6 +16,7 @@ import { ProjectForm } from "./pages/ProjectForm";
 import { Projects } from "./pages/Projects";
 import { Register } from "./pages/Register";
 import { ResetPassword } from "./pages/ResetPassword";
+import { VerificationPending } from "./pages/VerificationPending";
 
 export function App() {
   const [showSplash, setShowSplash] = useState(() => {
@@ -30,23 +32,27 @@ export function App() {
     <>
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/projects/new" element={<Protected><ProjectForm mode="create" /></Protected>} />
-        <Route path="/projects/:id" element={<ProjectDetail />} />
-        <Route path="/projects/:id/edit" element={<Protected><ProjectForm mode="edit" /></Protected>} />
-        <Route path="/profile" element={<Protected><Profile /></Protected>} />
-        <Route path="/opportunities" element={<Opportunities />} />
-        <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+        {/* Onboarding can be standalone full-screen */}
+        <Route path="/onboarding" element={<Protected><Onboarding /></Protected>} />
+        
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerificationPending />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/new" element={<Protected><ProjectForm mode="create" /></Protected>} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/projects/:id/edit" element={<Protected><ProjectForm mode="edit" /></Protected>} />
+          <Route path="/profile" element={<Protected><Profile /></Protected>} />
+          <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
     </>
   );
 }

@@ -66,7 +66,7 @@ router.post(
         const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
-          email_confirm: true,
+          email_confirm: false,
         });
 
         if (adminError) {
@@ -172,7 +172,12 @@ router.post(
       }
 
       if (authError || !authData?.user) {
-        throw new HttpError(401, "Invalid email or password");
+        if (authError?.message?.toLowerCase()?.includes("not confirmed")) { throw new HttpError(403, "Please verify your email before logging in. Check your inbox for the verification link."); } throw new HttpError(401, "Invalid email or password");
+      }
+
+      const userAuth = authData.user as any;
+      if (userAuth && !userAuth.email_confirmed_at && !userAuth.confirmed_at) {
+        throw new HttpError(403, "Please verify your email before logging in. Check your inbox for the verification link.");
       }
 
       // Get or create user in our database

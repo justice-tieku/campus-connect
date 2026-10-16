@@ -13,13 +13,16 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isUnverified, setIsUnverified] = useState(false);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
   async function handleGoogleLogin() {
     setError("");
+    setIsUnverified(false);
     setGoogleBusy(true);
     try {
       const { error: sbError } = await supabase.auth.signInWithOAuth({
@@ -39,16 +42,25 @@ export function Login() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setIsUnverified(false);
     setBusy(true);
     try {
       const res = await api.login(email.trim().toLowerCase(), password);
       if (!res || !res.user) {
         throw new Error("Unable to sign in. Please verify your email and password.");
       }
+      if (rememberMe) {
+        localStorage.setItem("cc_remember_email", email.trim().toLowerCase());
+      } else {
+        localStorage.removeItem("cc_remember_email");
+      }
       await refresh();
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Invalid credentials or network issue";
+      if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("unverified") || msg.toLowerCase().includes("confirm")) {
+        setIsUnverified(true);
+      }
       setError(msg);
     } finally {
       setBusy(false);
@@ -59,16 +71,16 @@ export function Login() {
     <div className="min-h-[85vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6">
       <div className="w-full max-w-[420px] flex flex-col">
         {/* Card Container with Hairline Border and Zero Gradient */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-sm">
           {/* Header Section inside card */}
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4 shadow-sm">
               <span className="material-symbols-outlined text-[26px]">account_balance</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1">
               Welcome back
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500">
               Log in with your university credentials
             </p>
           </div>
@@ -95,7 +107,7 @@ export function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="student@university.edu"
-                className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
               />
             </div>
 
@@ -121,7 +133,7 @@ export function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
                 />
                 <button
                   type="button"
@@ -136,10 +148,33 @@ export function Login() {
               </div>
             </div>
 
+            {/* Remember Me */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-xs text-slate-600 font-medium">Remember me</span>
+              </label>
+            </div>
+
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-50 p-2.5 text-xs text-red-700 border border-red-200">
-                {error}
+              <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-1">
+                <p className="font-semibold">{error}</p>
+                {isUnverified && (
+                  <div className="pt-1">
+                    <Link
+                      to={`/verify-email?email=${encodeURIComponent(email)}`}
+                      className="font-bold underline text-red-800 hover:text-red-900"
+                    >
+                      Click here to view verification details or resend email →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
@@ -147,7 +182,7 @@ export function Login() {
             <button
               type="submit"
               disabled={busy || googleBusy}
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 shadow-sm"
             >
               <span>{busy ? "Signing in…" : "Sign In"}</span>
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -168,7 +203,7 @@ export function Login() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={busy || googleBusy}
-            className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50"
+            className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50"
           >
             {googleBusy ? (
               <span className="text-xs text-slate-500">Connecting to Google…</span>
@@ -189,14 +224,14 @@ export function Login() {
           <div className="mt-5 pt-4 border-t border-slate-100 flex items-start gap-2 text-slate-500">
             <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5 shrink-0">verified_user</span>
             <p className="text-xs leading-relaxed">
-              Authorized students, university staff, and alumni may authenticate directly.
+              Authorized students and university staff may authenticate directly.
             </p>
           </div>
         </div>
 
         {/* Bottom Sign-up Redirect */}
         <div className="text-center mt-5">
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500">
             Don't have an account?{" "}
             <Link
               to="/register"

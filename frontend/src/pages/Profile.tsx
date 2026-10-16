@@ -36,6 +36,11 @@ export function Profile() {
     setSkillInput("");
   }
 
+  function removeSkill(skillToRemove: string) {
+    const skills = (form.skills || []).filter((s) => s !== skillToRemove);
+    setForm({ ...form, skills });
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -52,7 +57,7 @@ export function Profile() {
         imageUrl: form.imageUrl || undefined,
       });
       setForm(profile);
-      setSaved("Profile saved successfully!");
+      setSaved("Profile updated successfully!");
       setTimeout(() => setSaved(""), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -61,196 +66,217 @@ export function Profile() {
     }
   }
 
+  const displayName = user?.email ? user.email.split("@")[0] : "Student";
+  const formattedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+
   return (
-    <div className="mx-auto max-w-2xl animate-fade-in">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-xl font-bold text-white">
-            {user?.email.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h1 className="page-heading mb-1">
-              Your profile
-            </h1>
-            <div className="flex items-center gap-2">
-              <span className="badge badge-brand">{user?.role}</span>
-              <span className="text-sm text-surface-500">{user?.email}</span>
+    <div className="min-h-[85vh] bg-[#faf8ff] text-[#131b2e] py-8 px-4 sm:px-6 antialiased">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header / Identity Banner */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl uppercase shadow-sm">
+              {displayName.charAt(0)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                  {formattedName}
+                </h1>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  {user?.role ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : "Student"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px] text-slate-400">mail</span>
+                <span>{user?.email}</span>
+                <span className="text-slate-300">•</span>
+                <span>{form.institution || "Verified University"}</span>
+              </p>
             </div>
           </div>
         </div>
-        <p className="text-surface-500 dark:text-surface-400">
-          This info is shown to teammates when you request to join a project.
-        </p>
-      </div>
 
-      {/* Card */}
-      <form className="card p-8 space-y-6" onSubmit={onSubmit}>
-        {/* Profile image preview + URL */}
-        <div className="flex items-start gap-5">
-          <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-50 ring-2 ring-brand-100 dark:bg-brand-900/30 dark:ring-brand-700">
-            {form.imageUrl ? (
-              <img src={form.imageUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <i className="fa-solid fa-user text-2xl text-brand-300 dark:text-brand-600"></i>
-            )}
+        {/* Success Alert */}
+        {saved && (
+          <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-2 shadow-sm">
+            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+            <span>{saved}</span>
           </div>
-          <div className="flex-1">
-            <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-              Profile image URL
-            </label>
-            <input
-              type="url"
-              className="input"
-              value={form.imageUrl || ""}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="https://example.com/photo.jpg"
-            />
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-700 flex items-center gap-2 shadow-sm">
+            <span className="material-symbols-outlined text-[18px]">error</span>
+            <span>{error}</span>
           </div>
-        </div>
+        )}
 
-        {/* Biography */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-            <i className="fa-solid fa-quote-left mr-1.5 text-xs text-surface-400"></i>
-            Biography
-          </label>
-          <textarea
-            className="input min-h-28 resize-y"
-            value={form.biography || ""}
-            onChange={(e) => setForm({ ...form, biography: e.target.value })}
-            placeholder="Tell teammates about yourself, your interests, and what you're looking for..."
-          />
-        </div>
-
-        {/* Institution + Programme */}
-        <div className="grid gap-5 md:grid-cols-2">
+        {/* Form Card */}
+        <form className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 space-y-6 shadow-sm" onSubmit={onSubmit}>
+          {/* Bio */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-              <i className="fa-solid fa-building-columns mr-1.5 text-xs text-surface-400"></i>
-              Institution
-            </label>
-            <input
-              className="input"
-              value={form.institution || ""}
-              onChange={(e) => setForm({ ...form, institution: e.target.value })}
-              placeholder="University of Lagos"
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700" htmlFor="bio">
+                Developer Bio & Research Focus
+              </label>
+              <span className="text-xs text-slate-400 font-mono">{(form.biography || "").length} / 280</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-2">
+              Shown to team leads when you request to join a project or apply for an internship.
+            </p>
+            <textarea
+              id="bio"
+              rows={3}
+              maxLength={280}
+              value={form.biography || ""}
+              onChange={(e) => setForm({ ...form, biography: e.target.value })}
+              placeholder="Tell others what you build and your primary software interests..."
+              className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors resize-none"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-              <i className="fa-solid fa-book mr-1.5 text-xs text-surface-400"></i>
-              Programme
-            </label>
-            <input
-              className="input"
-              value={form.programme || ""}
-              onChange={(e) => setForm({ ...form, programme: e.target.value })}
-              placeholder="Computer Science"
-            />
-          </div>
-        </div>
 
-        {/* Skills */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-            <i className="fa-solid fa-wand-magic-sparkles mr-1.5 text-xs text-surface-400"></i>
-            Skills
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {(form.skills || []).map((skill) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Institution */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="institution">
+                University / Institution
+              </label>
+              <input
+                id="institution"
+                type="text"
+                value={form.institution || ""}
+                onChange={(e) => setForm({ ...form, institution: e.target.value })}
+                placeholder="e.g. Stanford University or MIT"
+                className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+              />
+            </div>
+
+            {/* Programme */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="programme">
+                Degree / Department
+              </label>
+              <input
+                id="programme"
+                type="text"
+                value={form.programme || ""}
+                onChange={(e) => setForm({ ...form, programme: e.target.value })}
+                placeholder="e.g. B.S. Computer Science"
+                className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Tech Stack Skills */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Tech Stack Skills
+            </label>
+            <p className="text-xs text-slate-500 mb-2">
+              Add programming languages, frameworks, and tools to power project matching.
+            </p>
+
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill();
+                  }
+                }}
+                placeholder="Type a skill (e.g. Python, Docker) and press Add..."
+                className="flex-1 bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+              />
               <button
                 type="button"
-                key={skill}
-                className="badge-brand gap-1.5 cursor-pointer transition-all duration-200 hover:bg-brand-100 hover:ring-brand-300 dark:hover:bg-brand-800 dark:hover:ring-brand-600"
-                onClick={() =>
-                  setForm({ ...form, skills: (form.skills || []).filter((s) => s !== skill) })
-                }
+                onClick={addSkill}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
               >
-                {skill}
-                <i className="fa-solid fa-xmark text-[10px] text-brand-400 dark:text-brand-500"></i>
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                <span>Add</span>
               </button>
-            ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2 bg-slate-50 rounded-lg border border-slate-200">
+              {(form.skills || []).length === 0 ? (
+                <span className="text-xs text-slate-400">No skills added yet.</span>
+              ) : (
+                form.skills?.map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white text-emerald-800 border border-emerald-200 rounded text-xs font-semibold shadow-2xs"
+                  >
+                    <span>{skill}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(skill)}
+                      className="text-slate-400 hover:text-red-600 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
           </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              className="input flex-1"
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              placeholder="Type a skill and press Enter…"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addSkill();
-                }
-              }}
-            />
-            <button type="button" className="btn-secondary px-4" onClick={addSkill}>
-              <i className="fa-solid fa-plus text-xs"></i>
-              Add
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* GitHub URL */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="github">
+                GitHub Profile URL
+              </label>
+              <div className="relative flex items-center">
+                <span className="material-symbols-outlined text-slate-400 text-[18px] absolute left-3">code</span>
+                <input
+                  id="github"
+                  type="url"
+                  value={form.githubLink || ""}
+                  onChange={(e) => setForm({ ...form, githubLink: e.target.value })}
+                  placeholder="https://github.com/username"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Portfolio URL */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="portfolio">
+                Portfolio Website
+              </label>
+              <div className="relative flex items-center">
+                <span className="material-symbols-outlined text-slate-400 text-[18px] absolute left-3">language</span>
+                <input
+                  id="portfolio"
+                  type="url"
+                  value={form.portfolioLink || ""}
+                  onChange={(e) => setForm({ ...form, portfolioLink: e.target.value })}
+                  placeholder="https://yourportfolio.dev"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
+            <button
+              type="submit"
+              disabled={busy}
+              className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[16px]">save</span>
+              <span>{busy ? "Saving..." : "Save Profile"}</span>
             </button>
           </div>
-        </div>
-
-        {/* Links */}
-        <div className="grid gap-5 md:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-              <i className="fa-brands fa-github mr-1.5 text-xs text-surface-400"></i>
-              GitHub
-            </label>
-            <input
-              type="url"
-              className="input"
-              value={form.githubLink || ""}
-              onChange={(e) => setForm({ ...form, githubLink: e.target.value })}
-              placeholder="https://github.com/username"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-300">
-              <i className="fa-solid fa-globe mr-1.5 text-xs text-surface-400"></i>
-              Portfolio
-            </label>
-            <input
-              type="url"
-              className="input"
-              value={form.portfolioLink || ""}
-              onChange={(e) => setForm({ ...form, portfolioLink: e.target.value })}
-              placeholder="https://yourportfolio.com"
-            />
-          </div>
-        </div>
-
-        {/* Messages */}
-        {error && (
-          <div className="flex items-start gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700 ring-1 ring-red-200 animate-slide-down dark:bg-red-900/20 dark:text-red-300 dark:ring-red-800">
-            <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
-            {error}
-          </div>
-        )}
-        {saved && (
-          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700 ring-1 ring-emerald-200 animate-slide-down dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800">
-            <i className="fa-solid fa-circle-check mt-0.5 text-emerald-500"></i>
-            {saved}
-          </div>
-        )}
-
-        {/* Submit */}
-        <button className="btn-primary w-full py-3" disabled={busy}>
-          {busy ? (
-            <>
-              <i className="fa-solid fa-spinner fa-spin text-xs"></i>
-              Saving…
-            </>
-          ) : (
-            <>
-              <i className="fa-solid fa-check text-xs"></i>
-              Save profile
-            </>
-          )}
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
