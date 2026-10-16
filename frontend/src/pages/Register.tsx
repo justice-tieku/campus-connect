@@ -100,7 +100,7 @@ export function Register() {
       }
 
       await refresh();
-      navigate("/projects", { state: { message: "Account created successfully!" } });
+      navigate("/dashboard", { state: { message: "Account created successfully!" } });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
     } finally {

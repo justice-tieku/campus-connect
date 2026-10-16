@@ -8,7 +8,7 @@ export function Login() {
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string; message?: string } | null)?.from || "/projects";
+  const from = (location.state as { from?: string; message?: string } | null)?.from || "/dashboard";
   const message = (location.state as { from?: string; message?: string } | null)?.message;
 
   const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ export function Login() {
       const { error: sbError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/projects`,
+          redirectTo: `${window.location.origin}/dashboard`,
         },
       });
       if (sbError) throw new Error(sbError.message);
