@@ -17,6 +17,13 @@ export function Layout() {
 
   const navLinks = (
     <>
+      <a
+        href="/#how-it-works"
+        className="text-sm font-medium transition-colors pb-1 border-b-2 no-underline text-slate-600 hover:text-slate-900 border-transparent"
+        onClick={() => setOpen(false)}
+      >
+        How It Works
+      </a>
       <NavLink to="/projects" className={linkClass} onClick={() => setOpen(false)}>
         Projects
       </NavLink>
