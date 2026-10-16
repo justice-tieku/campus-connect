@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, type Profile as ProfileType } from "../api";
 import { useAuth } from "../auth";
+import { useToast } from "../context/ToastContext";
 
 const empty: Partial<ProfileType> = {
   biography: "",
@@ -41,6 +42,8 @@ export function Profile() {
     setForm({ ...form, skills });
   }
 
+  const toast = useToast();
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -58,9 +61,12 @@ export function Profile() {
       });
       setForm(profile);
       setSaved("Profile updated successfully!");
+      toast.success("Profile updated successfully!", "Saved");
       setTimeout(() => setSaved(""), 4000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setError(msg);
+      toast.error(msg, "Save Failed");
     } finally {
       setBusy(false);
     }

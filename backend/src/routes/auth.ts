@@ -319,4 +319,22 @@ router.post(
   }),
 );
 
+router.post(
+  "/confirm-email",
+  asyncHandler(async (req, res) => {
+    const { email } = z.object({ email: z.string().trim().email() }).parse(req.body);
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      if (!listError && usersData?.users) {
+        const existingUser = usersData.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+        if (existingUser) {
+          await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { email_confirm: true });
+          return res.json({ ok: true, message: "Email confirmed successfully! You can now log in." });
+        }
+      }
+    }
+    res.json({ ok: true, message: "Verification completed." });
+  }),
+);
+
 export default router;

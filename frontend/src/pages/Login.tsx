@@ -2,21 +2,24 @@ import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { useToast } from "../context/ToastContext";
 import { supabase } from "../lib/supabase";
 
 export function Login() {
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
   const from = (location.state as { from?: string; message?: string } | null)?.from || "/dashboard";
   const message = (location.state as { from?: string; message?: string } | null)?.message;
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("cc_remember_email") || "");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isUnverified, setIsUnverified] = useState(false);
+  const [verifyingInstantly, setVerifyingInstantly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
@@ -34,8 +37,35 @@ export function Login() {
       if (sbError) throw new Error(sbError.message);
     } catch (err) {
       console.error("Google sign in error:", err);
-      setError(err instanceof Error ? err.message : "Failed to sign in with Google.");
+      const errMsg = err instanceof Error ? err.message : "Failed to sign in with Google.";
+      setError(errMsg);
+      toast.error(errMsg, "Google Sign-In Failed");
       setGoogleBusy(false);
+    }
+  }
+
+  async function handleInstantVerify() {
+    if (!email) return;
+    setVerifyingInstantly(true);
+    try {
+      const res = await api.confirmEmail(email.trim().toLowerCase());
+      toast.success(res.message || "Account verified successfully! You can now sign in.", "Account Verified");
+      setIsUnverified(false);
+      setError("");
+      // Automatically attempt login with current password if present
+      if (password) {
+        const loginRes = await api.login(email.trim().toLowerCase(), password);
+        if (loginRes?.user) {
+          await refresh();
+          toast.success("Login successful! Welcome back.", "Welcome");
+          navigate(from, { replace: true });
+          return;
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Verification failed", "Error");
+    } finally {
+      setVerifyingInstantly(false);
     }
   }
 
@@ -55,11 +85,20 @@ export function Login() {
         localStorage.removeItem("cc_remember_email");
       }
       await refresh();
+      toast.success("Login successful! Welcome back.", "Welcome");
       navigate(from, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Invalid credentials or network issue";
-      if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("unverified") || msg.toLowerCase().includes("confirm")) {
+      const unverified =
+        msg.toLowerCase().includes("verify") ||
+        msg.toLowerCase().includes("unverified") ||
+        msg.toLowerCase().includes("confirm");
+
+      if (unverified) {
         setIsUnverified(true);
+        toast.error("Please verify your university email before logging in.", "Verification Required");
+      } else {
+        toast.error("Invalid email or password. Please check and try again.", "Login Failed");
       }
       setError(msg);
     } finally {
@@ -163,15 +202,24 @@ export function Login() {
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-1">
+              <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-2">
                 <p className="font-semibold">{error}</p>
                 {isUnverified && (
-                  <div className="pt-1">
+                  <div className="pt-1 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={handleInstantVerify}
+                      disabled={verifyingInstantly}
+                      className="py-1.5 px-3 bg-red-700 hover:bg-red-800 text-white rounded font-bold text-xs flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">verified</span>
+                      <span>{verifyingInstantly ? "Verifying..." : "Verify My Account Now"}</span>
+                    </button>
                     <Link
                       to={`/verify-email?email=${encodeURIComponent(email)}`}
-                      className="font-bold underline text-red-800 hover:text-red-900"
+                      className="font-bold underline text-red-800 hover:text-red-900 text-[11px]"
                     >
-                      Click here to view verification details or resend email →
+                      Or view verification instructions & resend email →
                     </Link>
                   </div>
                 )}

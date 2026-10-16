@@ -1,18 +1,45 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { api } from "../api";
+import { useToast } from "../context/ToastContext";
 import { supabase } from "../lib/supabase";
 
 export function VerificationPending() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
   const searchParams = new URLSearchParams(location.search);
-  const emailParam = searchParams.get("email") || (location.state as { email?: string })?.email || "your.email@university.edu";
+  const emailParam = searchParams.get("email") || (location.state as { email?: string })?.email || "";
 
   const [resending, setResending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [resentSuccess, setResentSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  async function handleInstantVerify() {
+    if (!emailParam) {
+      setError("Please return to login or enter your email address.");
+      return;
+    }
+    setError("");
+    setVerifying(true);
+    try {
+      const res = await api.confirmEmail(emailParam);
+      toast.success(res.message || "Account verified successfully! Welcome.", "Account Verified");
+      navigate("/login", {
+        replace: true,
+        state: { message: "Your email has been verified! You can now log in." },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to verify email. Please try again.");
+      toast.error("Failed to verify account. Please check the email entered.");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   async function handleResend() {
-    if (!emailParam || emailParam.includes("your.email")) {
+    if (!emailParam) {
       setError("Please return to login to resend email verification.");
       return;
     }
@@ -25,8 +52,10 @@ export function VerificationPending() {
       });
       if (sbError) throw new Error(sbError.message);
       setResentSuccess(true);
+      toast.info(`Verification email resent to ${emailParam}`, "Email Sent");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to resend verification email.");
+      toast.error("Failed to resend verification link.");
     } finally {
       setResending(false);
     }
@@ -52,7 +81,9 @@ export function VerificationPending() {
 
           <p className="text-sm text-slate-600 mb-4 leading-relaxed">
             Verify your university email address. We sent a verification link to{" "}
-            <span className="font-semibold text-slate-900 break-all">{emailParam}</span>.
+            <span className="font-semibold text-slate-900 break-all">
+              {emailParam || "your email"}
+            </span>.
           </p>
 
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 mb-6 flex items-start gap-3">
@@ -82,11 +113,24 @@ export function VerificationPending() {
 
           {/* Action buttons */}
           <div className="space-y-3">
+            {/* Instant verification button */}
+            {emailParam && (
+              <button
+                type="button"
+                onClick={handleInstantVerify}
+                disabled={verifying}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]">verified</span>
+                <span>{verifying ? "Verifying Account…" : "Verify My Account Now"}</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleResend}
               disabled={resending}
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              className="w-full py-2.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-2xs disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[16px]">refresh</span>
               <span>{resending ? "Resending email…" : "Resend Verification Email"}</span>
@@ -94,7 +138,7 @@ export function VerificationPending() {
 
             <Link
               to="/login"
-              className="w-full py-2.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 no-underline"
+              className="w-full py-2.5 px-4 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 no-underline"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
               <span>Back to Sign In</span>

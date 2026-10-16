@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { useToast } from "../context/ToastContext";
 import { supabase } from "../lib/supabase";
 
 type AccountRole = "STUDENT" | "STAFF";
@@ -46,6 +47,8 @@ export function Register() {
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
+  const toast = useToast();
+
   function handleSelectRole(role: AccountRole) {
     setError("");
     setActiveRole(role);
@@ -64,7 +67,9 @@ export function Register() {
       if (sbError) throw new Error(sbError.message);
     } catch (err) {
       console.error("Google sign up error:", err);
-      setError(err instanceof Error ? err.message : "Failed to sign up with Google.");
+      const errMsg = err instanceof Error ? err.message : "Failed to sign up with Google.";
+      setError(errMsg);
+      toast.error(errMsg, "Google Sign-Up Error");
       setGoogleBusy(false);
     }
   }
@@ -75,16 +80,19 @@ export function Register() {
 
     if (!agreed) {
       setError("Please accept the Terms of Service and Honor Code to continue.");
+      toast.error("Please accept the Terms of Service and Honor Code to continue.");
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      toast.error("Passwords do not match. Please re-enter.");
       return;
     }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
+      toast.error("Password must be at least 8 characters long.");
       return;
     }
 
@@ -103,12 +111,15 @@ export function Register() {
       }
 
       await refresh();
+      toast.success("Account created successfully! Please verify your email.", "Account Created");
       // Navigate to email verification pending screen with email parameter
       navigate(`/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`, {
         state: { email: email.trim().toLowerCase() },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(msg);
+      toast.error(msg, "Registration Failed");
     } finally {
       setBusy(false);
     }

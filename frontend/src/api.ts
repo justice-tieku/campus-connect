@@ -192,6 +192,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),
+  confirmEmail: (email: string) =>
+    request<{ ok: boolean; message: string }>("/api/auth/confirm-email", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   getProfile: () => request<{ profile: Profile | null }>("/api/profile/me"),
   updateProfile: (body: Partial<Profile>) =>
