@@ -17,6 +17,7 @@ export type UserAccount = {
   experience: Experience;
   availability: string;
   github: string;
+  imageUrl?: string;
   onboardingComplete: boolean;
   onboardingSkipped: boolean;
 };
@@ -160,6 +161,7 @@ export function formatBackendUser(rawUser: any): UserAccount {
     experience,
     availability: profile.availability || "",
     github: profile.githubLink || profile.github || "",
+    imageUrl: profile.imageUrl || rawUser.imageUrl || "",
     onboardingComplete: Boolean(profile.onboardingComplete),
     onboardingSkipped: Boolean(profile.onboardingSkipped),
   };

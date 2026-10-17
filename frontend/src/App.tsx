@@ -1415,7 +1415,7 @@ function AppShell({
             Campus community online
           </div>
           <button onClick={() => navigate("profile")} type="button">
-            <span>{initials}</span>
+            <span style={account.imageUrl ? { backgroundImage: `url(${account.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: 'transparent' } : {}}>{!account.imageUrl && initials}</span>
             <div>
               <strong>{account.name}</strong>
               <small>{account.accountType}</small>
@@ -2344,7 +2344,9 @@ function Profile({
         )}
       </div>
       <form className="profile-card" onSubmit={save}>
-        <div className="profile-avatar">{initials}</div>
+        <div className="profile-avatar" style={draft.imageUrl ? { backgroundImage: `url(${draft.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+          {!draft.imageUrl && initials}
+        </div>
         <div className="profile-fields">
           <div className="field-row">
             <Field label="Full name">
@@ -2452,6 +2454,20 @@ export default function App() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [authenticated, setAuthenticated] = useState<boolean>(() => Boolean(getStoredToken()));
+
+  // Handle OAuth callback token from URL (hash or search params)
+  useEffect(() => {
+    try {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      const token = new URLSearchParams(hash.split("?")[1] ?? search).get("token");
+      if (token) {
+        setStoredToken(token, true);
+        const cleanUrl = window.location.origin + window.location.pathname + (hash.split("?")[0] === "" ? "" : hash.split("?")[0]);
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch (_) {}
+  }, []);
 
   // Sync route on hash/popstate change
   useEffect(() => {
