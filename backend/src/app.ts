@@ -9,6 +9,7 @@ import joinRequestRoutes from "./routes/joinRequests";
 import opportunityRoutes from "./routes/opportunities";
 import adminRoutes from "./routes/admin";
 import reportRoutes from "./routes/reports";
+import notificationRoutes from "./routes/notifications";
 import { errorHandler, notFound } from "./middleware/error";
 
 export function createApp() {
@@ -53,6 +54,7 @@ export function createApp() {
   app.use("/api/opportunities", opportunityRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/reports", reportRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

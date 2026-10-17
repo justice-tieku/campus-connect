@@ -8,14 +8,18 @@ import { HttpError } from "../lib/httpError";
 const router = Router();
 
 const decisionSchema = z.object({
-  status: z.enum(["APPROVED", "REJECTED"]),
+  status: z.union([
+    z.enum(["APPROVED", "REJECTED"]),
+    z.enum(["accepted", "declined"]),
+  ]),
 });
 
 router.patch(
   "/:id",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { status } = decisionSchema.parse(req.body);
+    const raw = decisionSchema.parse(req.body);
+    const status = (raw.status === "accepted" || raw.status === "APPROVED") ? "APPROVED" : "REJECTED";
     const id = req.params.id as string;
     const joinRequest = await prisma.joinRequest.findUnique({
       where: { id },
@@ -37,6 +41,18 @@ router.patch(
         where: { id: joinRequest.id },
         data: { status: "REJECTED" },
       });
+
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: joinRequest.userId,
+            type: "JOIN_DECISION",
+            title: "Request declined",
+            body: `Your request to join ${joinRequest.project.title} was declined.`,
+          },
+        });
+      } catch (_) {}
+
       return res.json({ joinRequest: updated });
     }
 
@@ -64,6 +80,17 @@ router.patch(
       });
       return request;
     });
+
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: joinRequest.userId,
+          type: "JOIN_DECISION",
+          title: "Request accepted!",
+          body: `Congratulations! Your request to join ${joinRequest.project.title} was accepted.`,
+        },
+      });
+    } catch (_) {}
 
     res.json({ joinRequest: updated });
   }),

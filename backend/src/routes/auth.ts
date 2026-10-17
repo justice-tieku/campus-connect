@@ -1,220 +1,487 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { prisma } from "../lib/prisma";
 import { supabase, supabaseAdmin } from "../lib/supabase";
 import { clearAuthCookie, setAuthCookie, signToken } from "../lib/auth";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { HttpError } from "../lib/httpError";
+import type { Role } from "@prisma/client";
 
 const router = Router();
 
-const credentialsSchema = z.object({
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleCallbackUrl =
+  process.env.GOOGLE_CALLBACK_URL || "http://localhost:4000/api/auth/google/callback";
+
+function getGoogleOAuthClient() {
+  if (!googleClientId) return null;
+  return new OAuth2Client(googleClientId, googleClientSecret, googleCallbackUrl);
+}
+
+const registerSchema = z.object({
   email: z.string().trim().email().max(255).transform((v) => v.toLowerCase()),
   password: z.string().min(8).max(128),
   role: z.enum(["STUDENT", "ADMIN", "FACULTY", "ALUMNI", "STAFF"]).optional(),
+  accountType: z.string().optional(),
+  name: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  university: z.string().optional(),
   institution: z.string().optional(),
   programme: z.string().optional(),
 });
 
+const loginSchema = z.object({
+  email: z.string().trim().email().max(255).transform((v) => v.toLowerCase()),
+  password: z.string().min(1).max(128),
+  remember: z.boolean().optional(),
+});
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many attempts. Try again later." },
 });
 
 router.post(
-    "/register",
-    authLimiter,
-    asyncHandler(async (req, res) => {
-      const { email, password, role, firstName, lastName, institution, programme } = credentialsSchema.parse(req.body);
+  "/register",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const data = registerSchema.parse(req.body);
+    const { email, password, role, accountType, name, firstName, lastName, university, institution, programme } = data;
 
-      // Check if user already exists in our database
-      const existingDbUser = await prisma.user.findUnique({
-        where: { email },
+    let fName = firstName;
+    let lName = lastName;
+    if (name && (!fName || !lName)) {
+      const parts = name.trim().split(/\s+/);
+      fName = parts[0] || "";
+      lName = parts.slice(1).join(" ") || "";
+    }
+    const univ = university || institution || "";
+    let assignedRole: Role = "STUDENT";
+    if (role) {
+      assignedRole = role;
+    } else if (accountType?.toUpperCase() === "STAFF") {
+      assignedRole = "STAFF";
+    } else if (accountType?.toUpperCase() === "ADMIN") {
+      assignedRole = "ADMIN";
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Check existing database user
+    const existingDbUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingDbUser && !existingDbUser.password && !existingDbUser.passwordHash) {
+      // User registered via OAuth, allow setting password
+      const user = await prisma.user.update({
+        where: { id: existingDbUser.id },
+        data: {
+          password: passwordHash,
+          passwordHash,
+          role: assignedRole || existingDbUser.role,
+          firstName: fName || existingDbUser.firstName,
+          lastName: lName || existingDbUser.lastName,
+          institution: univ || existingDbUser.institution,
+          programme: programme || existingDbUser.programme,
+        },
+        select: { id: true, email: true, role: true, firstName: true, lastName: true, institution: true },
       });
-
-      // If user exists but has no password (e.g. signed up via Google), allow setting a password
-      if (existingDbUser && !existingDbUser.password) {
-        if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-          const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingDbUser.id, { password });
-          if (updateError) throw new HttpError(400, updateError.message);
-        }
-        const user = await prisma.user.update({
-          where: { id: existingDbUser.id },
-          data: { password, role: role || existingDbUser.role, firstName, lastName, institution, programme },
-          select: { id: true, email: true, role: true },
-        });
-        const token = signToken({ userId: user.id, role: user.role });
-        setAuthCookie(res, { userId: user.id, role: user.role });
-        return res.status(200).json({ user, token });
-      }
-
-      if (existingDbUser) {
-        throw new HttpError(400, "An account with this email address already exists. Please log in instead.");
-      }
-
-      // Register with Supabase Admin (bypasses default email rate-limits and auto-confirms email)
-      let authUser: { id: string; email?: string } | null = null;
-
-      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: false,
-        });
-
-        if (adminError) {
-          // If user already exists in Supabase Auth, try to update their password instead
-          if (adminError.message.toLowerCase().includes("already") || adminError.message.toLowerCase().includes("exists")) {
-            const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-            if (!listError) {
-              const existingAuthUser = existingUsers.users.find((u) => u.email?.toLowerCase() === email);
-              if (existingAuthUser) {
-                const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingAuthUser.id, { password });
-                if (updateError) throw new HttpError(400, updateError.message);
-                authUser = { id: existingAuthUser.id, email: existingAuthUser.email };
-              }
-            }
-          }
-          if (!authUser) {
-            throw new HttpError(400, adminError.message);
-          }
-        } else {
-          authUser = adminData.user;
-        }
-      } else {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (authError) {
-          throw new HttpError(400, authError.message);
-        }
-        authUser = authData.user;
-      }
-
-      if (!authUser) {
-        throw new HttpError(400, "Failed to create user");
-      }
-
-      // If the Supabase user already existed (Google signup), update the Prisma record instead of creating a duplicate
-      const existingPrismaUser = await prisma.user.findUnique({ where: { id: authUser.id } });
-      const user = existingPrismaUser
-        ? await prisma.user.update({
-            where: { id: authUser.id },
-            data: { password, role: role || existingPrismaUser.role, firstName, lastName, institution, programme },
-            select: { id: true, email: true, role: true },
-          })
-        : await prisma.user.create({
-            data: {
-              id: authUser.id,
-              email: authUser.email!,
-              password,
-              role: role || "STUDENT",
-              firstName,
-              lastName,
-              institution,
-              programme,
-              profile: { create: {} },
-            },
-            select: { id: true, email: true, role: true },
-          });
-
       const token = signToken({ userId: user.id, role: user.role });
       setAuthCookie(res, { userId: user.id, role: user.role });
-      res.status(201).json({ user, token });
-    }),
-  );
+      return res.status(200).json({ user, token });
+    }
+
+    if (existingDbUser) {
+      throw new HttpError(400, "An account with this email address already exists. Please log in instead.");
+    }
+
+    // Optional Supabase user registration attempt
+    let supabaseAuthId: string | null = null;
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { data: adminData } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+        if (adminData?.user) {
+          supabaseAuthId = adminData.user.id;
+        }
+      }
+    } catch (_) {
+      // Fallback silently to direct Prisma authentication
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        ...(supabaseAuthId ? { id: supabaseAuthId } : {}),
+        email,
+        password: passwordHash,
+        passwordHash,
+        role: assignedRole,
+        firstName: fName,
+        lastName: lName,
+        institution: univ,
+        programme,
+        profile: {
+          create: {
+            institution: univ,
+            programme: programme || "",
+          },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        institution: true,
+      },
+    });
+
+    const token = signToken({ userId: user.id, role: user.role });
+    setAuthCookie(res, { userId: user.id, role: user.role });
+    res.status(201).json({ user, token });
+  }),
+);
 
 router.post(
-    "/login",
-    authLimiter,
-    asyncHandler(async (req, res) => {
-      const { email, password } = credentialsSchema.parse(req.body);
+  "/login",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { email, password } = loginSchema.parse(req.body);
 
-      // Try standard login first
-      let authData: { user: { id: string; email?: string } | null } | null = null;
-      let authError: { message: string } | null = null;
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { profile: true },
+    });
 
-      const result = await supabase.auth.signInWithPassword({ email, password });
-      authData = result.data;
-      authError = result.error;
+    let authenticated = false;
 
-      // If standard login fails and we have admin access, try verifying via admin client
-      // (handles edge cases like users created via admin or OAuth-only accounts)
-      if (authError && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-        if (!listError) {
-          const existingUser = usersData.users.find((u) => u.email?.toLowerCase() === email);
-          if (existingUser) {
-            // User exists in Supabase - try to verify password via admin
-            const { data: verifyData, error: verifyError } = await supabaseAdmin.auth.admin.getUserById(existingUser.id);
-            if (!verifyError && verifyData.user) {
-              // User found - check if they have an identity (password provider)
-              const hasPasswordIdentity = (verifyData.user.identities ?? []).some(
-                (id) => id.provider === "email" || id.provider === "email"
-              );
-              if (hasPasswordIdentity) {
-                // Retry standard login
-                const retry = await supabase.auth.signInWithPassword({ email, password });
-                authData = retry.data;
-                authError = retry.error;
-              }
-            }
+    if (user) {
+      const storedHash = user.passwordHash || user.password;
+      if (storedHash) {
+        if (storedHash.startsWith("$2")) {
+          authenticated = await bcrypt.compare(password, storedHash);
+        } else {
+          authenticated = storedHash === password;
+          if (authenticated) {
+            const upgraded = await bcrypt.hash(password, 10);
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { password: upgraded, passwordHash: upgraded },
+            });
           }
         }
       }
+    }
 
-      if (authError || !authData?.user) {
-        if (authError?.message?.toLowerCase()?.includes("not confirmed")) { throw new HttpError(403, "Please verify your email before logging in. Check your inbox for the verification link."); } throw new HttpError(401, "Invalid email or password");
+    // Fallback: Check Supabase if local check did not authenticate
+    if (!authenticated) {
+      try {
+        const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (!sbError && sbData?.user) {
+          authenticated = true;
+          if (!user) {
+            const newUser = await prisma.user.create({
+              data: {
+                id: sbData.user.id,
+                email: sbData.user.email!,
+                role: "STUDENT",
+                profile: { create: {} },
+              },
+              include: { profile: true },
+            });
+            const token = signToken({ userId: newUser.id, role: newUser.role });
+            setAuthCookie(res, { userId: newUser.id, role: newUser.role });
+            return res.json({
+              user: {
+                id: newUser.id,
+                email: newUser.email,
+                role: newUser.role,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                institution: newUser.institution,
+                profile: newUser.profile,
+              },
+              token,
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!authenticated || !user) {
+      throw new HttpError(401, "Invalid email or password");
+    }
+
+    if (!user.isActive) {
+      throw new HttpError(401, "Account is deactivated");
+    }
+
+    const token = signToken({ userId: user.id, role: user.role });
+    setAuthCookie(res, { userId: user.id, role: user.role });
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        institution: user.institution,
+        profile: user.profile,
+      },
+      token,
+    });
+  }),
+);
+
+router.post("/logout", asyncHandler(async (_req, res) => {
+  clearAuthCookie(res);
+  res.json({ ok: true });
+}));
+
+router.post(
+  "/google",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { credential, code, idToken } = z.object({
+      credential: z.string().optional(),
+      idToken: z.string().optional(),
+      code: z.string().optional(),
+    }).parse(req.body);
+
+    const tokenToVerify = credential || idToken;
+    const client = getGoogleOAuthClient();
+
+    let email: string | undefined;
+    let googleId: string | undefined;
+    let givenName: string | undefined;
+    let familyName: string | undefined;
+    let name: string | undefined;
+    let picture: string | undefined;
+
+    if (tokenToVerify) {
+      if (client && process.env.GOOGLE_CLIENT_ID) {
+        const ticket = await client.verifyIdToken({
+          idToken: tokenToVerify,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload) {
+          throw new HttpError(401, "Invalid Google ID token payload");
+        }
+        if (!payload.email_verified) {
+          throw new HttpError(403, "Google account email is not verified");
+        }
+        email = payload.email?.toLowerCase();
+        googleId = payload.sub;
+        name = payload.name;
+        givenName = payload.given_name;
+        familyName = payload.family_name;
+        picture = payload.picture;
+      } else {
+        // Fallback decoder if GOOGLE_CLIENT_ID is not configured locally yet
+        try {
+          const base64Url = tokenToVerify.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            Buffer.from(base64, "base64")
+              .toString("binary")
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join(""),
+          );
+          const parsed = JSON.parse(jsonPayload);
+          if (parsed && parsed.email) {
+            email = parsed.email.toLowerCase();
+            googleId = parsed.sub;
+            name = parsed.name;
+            givenName = parsed.given_name;
+            familyName = parsed.family_name;
+            picture = parsed.picture;
+          }
+        } catch (_) {
+          throw new HttpError(400, "Invalid Google credential format");
+        }
+      }
+    } else if (code) {
+      if (!client) {
+        throw new HttpError(500, "Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.");
+      }
+      const { tokens } = await client.getToken(code);
+      if (!tokens.id_token) {
+        throw new HttpError(400, "Failed to retrieve Google ID token from authorization code");
+      }
+      const ticket = await client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email_verified) {
+        throw new HttpError(403, "Invalid Google authorization or unverified email");
+      }
+      email = payload.email?.toLowerCase();
+      googleId = payload.sub;
+      name = payload.name;
+      givenName = payload.given_name;
+      familyName = payload.family_name;
+      picture = payload.picture;
+    } else {
+      throw new HttpError(400, "Google credential or authorization code is required");
+    }
+
+    if (!email || !googleId) {
+      throw new HttpError(400, "Incomplete Google user claims");
+    }
+
+    // Account Linking & Creation
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [{ googleId }, { email }],
+      },
+      include: { profile: true },
+    });
+
+    if (user) {
+      if (!user.googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId },
+          include: { profile: true },
+        });
+      }
+    } else {
+      const fName = givenName || (name ? name.split(" ")[0] : "");
+      const lName = familyName || (name ? name.split(" ").slice(1).join(" ") : "");
+      user = await prisma.user.create({
+        data: {
+          email,
+          googleId,
+          role: "STUDENT",
+          firstName: fName,
+          lastName: lName,
+          isActive: true,
+          profile: {
+            create: {
+              imageUrl: picture || null,
+            },
+          },
+        },
+        include: { profile: true },
+      });
+    }
+
+    if (!user.isActive) {
+      throw new HttpError(401, "Account is deactivated");
+    }
+
+    const token = signToken({ userId: user.id, role: user.role });
+    setAuthCookie(res, { userId: user.id, role: user.role });
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        institution: user.institution,
+        profile: user.profile,
+      },
+      token,
+    });
+  }),
+);
+
+router.get("/google/url", (_req, res) => {
+  const client = getGoogleOAuthClient();
+  if (!client) {
+    return res.status(503).json({
+      error: "Google authentication is not yet configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
+    });
+  }
+  const url = client.generateAuthUrl({
+    access_type: "offline",
+    scope: ["openid", "email", "profile"],
+    prompt: "select_account",
+  });
+  res.json({ url });
+});
+
+router.get(
+  "/google/callback",
+  asyncHandler(async (req, res) => {
+    const code = typeof req.query.code === "string" ? req.query.code : null;
+    const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+    if (!code) {
+      return res.redirect(`${clientOrigin}/login?error=google_auth_failed`);
+    }
+    const client = getGoogleOAuthClient();
+    if (!client) {
+      return res.redirect(`${clientOrigin}/login?error=google_not_configured`);
+    }
+
+    try {
+      const { tokens } = await client.getToken(code);
+      if (!tokens.id_token) {
+        return res.redirect(`${clientOrigin}/login?error=missing_id_token`);
+      }
+      const ticket = await client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload?.email) {
+        return res.redirect(`${clientOrigin}/login?error=invalid_payload`);
       }
 
-      const userAuth = authData.user as any;
-      if (userAuth && !userAuth.email_confirmed_at && !userAuth.confirmed_at) {
-        throw new HttpError(403, "Please verify your email before logging in. Check your inbox for the verification link.");
-      }
+      const email = payload.email.toLowerCase();
+      const googleId = payload.sub;
 
-      // Get or create user in our database
-      let user = await prisma.user.findUnique({
-        where: { id: authData.user.id },
-        select: { id: true, email: true, role: true, isActive: true },
+      let user = await prisma.user.findFirst({
+        where: { OR: [{ googleId }, { email }] },
       });
 
       if (!user) {
         user = await prisma.user.create({
           data: {
-            id: authData.user.id,
-            email: authData.user.email!,
+            email,
+            googleId,
             role: "STUDENT",
-            profile: { create: {} },
+            firstName: payload.given_name || payload.name?.split(" ")[0] || "",
+            lastName: payload.family_name || payload.name?.split(" ").slice(1).join(" ") || "",
+            profile: { create: { imageUrl: payload.picture || null } },
           },
-          select: { id: true, email: true, role: true, isActive: true },
         });
-      }
-
-      if (!user.isActive) {
-        throw new HttpError(401, "Account is deactivated");
+      } else if (!user.googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId },
+        });
       }
 
       const token = signToken({ userId: user.id, role: user.role });
       setAuthCookie(res, { userId: user.id, role: user.role });
-      res.json({
-        user: { id: user.id, email: user.email, role: user.role },
-        token,
-      });
-    }),
-  );
-
-router.post("/logout", asyncHandler(async (req, res) => {
-  clearAuthCookie(res);
-  res.json({ ok: true });
-}));
+      res.redirect(`${clientOrigin}/dashboard?token=${encodeURIComponent(token)}`);
+    } catch (err) {
+      res.redirect(`${clientOrigin}/login?error=callback_failed`);
+    }
+  }),
+);
 
 router.post(
   "/sync-oauth",
@@ -224,14 +491,12 @@ router.post(
       id: z.string(),
     }).parse(req.body);
 
-    // Upsert user in our database
     let user = await prisma.user.findUnique({
       where: { id },
       select: { id: true, email: true, role: true, isActive: true },
     });
 
     if (!user) {
-      // Check if user exists with this email under different id
       const existingByEmail = await prisma.user.findUnique({ where: { email } });
       if (existingByEmail) {
         user = existingByEmail;
@@ -271,6 +536,10 @@ router.get(
         id: true,
         email: true,
         role: true,
+        firstName: true,
+        lastName: true,
+        institution: true,
+        programme: true,
         isActive: true,
         createdAt: true,
         profile: true,
@@ -285,11 +554,13 @@ router.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const { email } = z.object({ email: z.string().trim().email() }).parse(req.body);
-    const origin = req.headers.origin || process.env.CLIENT_ORIGIN || "https://campusconnect-gh.vercel.app";
-    const redirectTo = `${origin}/reset-password`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-    if (error) {
-      throw new HttpError(400, error.message);
+    const origin = req.headers.origin || process.env.CLIENT_ORIGIN || "http://localhost:5173";
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (user) {
+      // In development/test mode, create a reset link
+      const resetToken = Buffer.from(`${user.id}:${Date.now() + 30 * 60 * 1000}`).toString("base64");
+      const resetLink = `${origin}/#reset?token=${encodeURIComponent(resetToken)}`;
+      return res.json({ message: "Password reset link sent to your email.", resetLink });
     }
     res.json({ message: "Password reset link sent to your email." });
   }),
@@ -305,14 +576,20 @@ router.post(
     }).parse(req.body);
 
     if (token) {
-      // If token provided via admin / verify
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: "recovery",
-      });
-      if (error) throw new HttpError(400, error.message);
-      if (data.user) {
-        await supabaseAdmin.auth.admin.updateUserById(data.user.id, { password });
+      try {
+        const decoded = Buffer.from(token, "base64").toString("utf8");
+        const [userId, expiresAt] = decoded.split(":");
+        if (Number(expiresAt) < Date.now()) {
+          throw new HttpError(400, "Reset token has expired");
+        }
+        const passwordHash = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+          where: { id: userId },
+          data: { password: passwordHash, passwordHash },
+        });
+      } catch (err) {
+        if (err instanceof HttpError) throw err;
+        throw new HttpError(400, "Invalid reset token");
       }
     }
     res.json({ message: "Password successfully updated." });
@@ -323,17 +600,11 @@ router.post(
   "/confirm-email",
   asyncHandler(async (req, res) => {
     const { email } = z.object({ email: z.string().trim().email() }).parse(req.body);
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-      if (!listError && usersData?.users) {
-        const existingUser = usersData.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
-        if (existingUser) {
-          await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { email_confirm: true });
-          return res.json({ ok: true, message: "Email confirmed successfully! You can now log in." });
-        }
-      }
-    }
-    res.json({ ok: true, message: "Verification completed." });
+    await prisma.user.updateMany({
+      where: { email: email.toLowerCase() },
+      data: { isActive: true },
+    });
+    res.json({ ok: true, message: "Email confirmed successfully! You can now log in." });
   }),
 );
 

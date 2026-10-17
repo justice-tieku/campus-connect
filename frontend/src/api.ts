@@ -1,106 +1,105 @@
 export type Role = "STUDENT" | "ADMIN" | "FACULTY" | "ALUMNI" | "STAFF";
-export type ProjectStatus = "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CLOSED";
-export type JoinRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
-export type OpportunityType = "INTERNSHIP" | "EVENT" | "SCHOLARSHIP" | "OTHER";
+export type AccountType = "Student" | "Staff" | "Admin";
+export type Experience = "Beginner" | "Intermediate" | "Advanced";
+export type ProjectStatus = "Open" | "In progress" | "Completed" | "Closed";
 
-export type Profile = {
+export type UserAccount = {
   id: string;
-  userId: string;
-  biography: string;
-  institution: string;
-  programme: string;
-  skills: string[];
-  githubLink?: string | null;
-  portfolioLink?: string | null;
-  imageUrl?: string | null;
+  name: string;
+  email: string;
+  accountType: AccountType;
+  university: string;
+  verified: boolean;
+  verificationToken?: string;
+  createdAt: string;
+  bio: string;
+  techStack: string[];
+  experience: Experience;
+  availability: string;
+  github: string;
+  onboardingComplete: boolean;
+  onboardingSkipped: boolean;
 };
 
-export type User = {
+export type JoinRequest = {
   id: string;
-  email: string;
-  role: Role;
-  isActive?: boolean;
-  createdAt?: string;
-  profile?: Profile | null;
+  applicantEmail: string;
+  applicantName: string;
+  message: string;
+  status: "pending" | "accepted" | "declined";
 };
 
 export type Project = {
   id: string;
   title: string;
   description: string;
-  requiredSkills: string[];
-  status: ProjectStatus;
-  teamCapacity: number;
-  creatorId: string;
-  createdAt: string;
-  creator?: { id: string; email: string; profile?: Partial<Profile> | null };
-  members?: Array<{
-    id: string;
-    userId: string;
-    user: { id: string; email: string; profile?: Partial<Profile> | null };
-  }>;
-  _count?: { members: number; joinRequests?: number };
+  category: string;
+  techStack: string[];
+  roles: string[];
+  teamSize: number;
+  status: "Open" | "In progress" | "Completed";
+  ownerEmail: string;
+  ownerName: string;
+  members: string[];
+  requests: JoinRequest[];
 };
 
-export type JoinRequest = {
-  id: string;
-  projectId: string;
-  userId: string;
-  status: JoinRequestStatus;
-  message?: string | null;
-  user?: { id: string; email: string; profile?: Partial<Profile> | null };
-};
-
-export type Opportunity = {
+export type Internship = {
   id: string;
   title: string;
-  description: string;
-  type: OpportunityType;
-  link?: string | null;
-  createdAt: string;
+  company: string;
+  location: string;
+  skills: string[];
+  applyUrl: string;
 };
 
-export type Report = {
+export type Notice = {
   id: string;
-  reason: string;
-  status: string;
+  recipient: string;
+  title: string;
+  detail: string;
   createdAt: string;
-  reporter: { id: string; email: string };
-  reportedUser?: { id: string; email: string } | null;
-  project?: { id: string; title: string } | null;
+  read: boolean;
 };
 
-const API_BASE = (import.meta.env.VITE_API_ORIGIN || "https://campus-connect-98hk.onrender.com").replace(/\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_ORIGIN || "").replace(/\/+$/, "");
 
 export function getStoredToken(): string | null {
-  return localStorage.getItem("cc_auth_token");
+  return localStorage.getItem("cc_auth_token") || sessionStorage.getItem("cc_auth_token");
 }
 
-export function setStoredToken(token: string | null) {
+export function setStoredToken(token: string | null, remember: boolean = true) {
+  localStorage.removeItem("cc_auth_token");
+  sessionStorage.removeItem("cc_auth_token");
   if (token) {
-    localStorage.setItem("cc_auth_token", token);
-  } else {
-    localStorage.removeItem("cc_auth_token");
+    if (remember) {
+      localStorage.setItem("cc_auth_token", token);
+    } else {
+      sessionStorage.setItem("cc_auth_token", token);
+    }
   }
 }
 
-export function getStoredUser(): User | null {
+export function getStoredAccount(): UserAccount | null {
   try {
-    const raw = localStorage.getItem("cc_user");
+    const raw = localStorage.getItem("campus-connect-account") || sessionStorage.getItem("campus-connect-account");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-export function setStoredUser(user: User | null) {
-  if (user) {
-    localStorage.setItem("cc_user", JSON.stringify(user));
-  } else {
-    localStorage.removeItem("cc_user");
+export function setStoredAccount(account: UserAccount | null, remember: boolean = true) {
+  localStorage.removeItem("campus-connect-account");
+  sessionStorage.removeItem("campus-connect-account");
+  if (account) {
+    if (remember) {
+      localStorage.setItem("campus-connect-account", JSON.stringify(account));
+    } else {
+      sessionStorage.setItem("campus-connect-account", JSON.stringify(account));
+    }
   }
 }
-
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
@@ -133,147 +132,211 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+export function formatBackendUser(rawUser: any): UserAccount {
+  const profile = rawUser.profile || {};
+  const name =
+    rawUser.name ||
+    `${rawUser.firstName || ""} ${rawUser.lastName || ""}`.trim() ||
+    rawUser.email.split("@")[0];
+
+  const roleUpper = (rawUser.role || "STUDENT").toUpperCase();
+  const accountType: AccountType =
+    roleUpper === "STAFF" ? "Staff" : roleUpper === "ADMIN" ? "Admin" : "Student";
+
+  const expRaw = profile.experience || "Beginner";
+  const experience: Experience =
+    expRaw === "Intermediate" ? "Intermediate" : expRaw === "Advanced" ? "Advanced" : "Beginner";
+
+  return {
+    id: rawUser.id,
+    name,
+    email: rawUser.email,
+    accountType,
+    university: rawUser.institution || profile.institution || "",
+    verified: rawUser.isActive !== false,
+    createdAt: rawUser.createdAt || new Date().toISOString(),
+    bio: profile.biography || profile.bio || "",
+    techStack: profile.skills || profile.techStack || [],
+    experience,
+    availability: profile.availability || "",
+    github: profile.githubLink || profile.github || "",
+    onboardingComplete: Boolean(profile.onboardingComplete),
+    onboardingSkipped: Boolean(profile.onboardingSkipped),
+  };
+}
+
 export const api = {
-  me: () => request<{ user: User }>("/api/auth/me"),
+  me: async () => {
+    const res = await request<{ user: any }>("/api/auth/me");
+    return { user: formatBackendUser(res.user) };
+  },
+
   register: async (data: {
     email: string;
     password: string;
-    role?: Role;
-    firstName?: string;
-    lastName?: string;
-    institution?: string;
-    programme?: string;
+    name?: string;
+    accountType?: AccountType;
+    university?: string;
   }) => {
-    const res = await request<{ user: User; token?: string }>("/api/auth/register", {
+    const res = await request<{ user: any; token?: string }>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     });
     if (res.token) {
-      setStoredToken(res.token);
+      setStoredToken(res.token, true);
     }
-    if (res.user) {
-      setStoredUser(res.user);
-    }
-    return res;
+    const formatted = formatBackendUser(res.user);
+    setStoredAccount(formatted, true);
+    return { user: formatted, token: res.token };
   },
-  login: async (email: string, password: string) => {
-    const res = await request<{ user: User; token?: string }>("/api/auth/login", {
+
+  login: async (email: string, password: string, remember: boolean = true) => {
+    const res = await request<{ user: any; token?: string }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
     if (res.token) {
-      setStoredToken(res.token);
+      setStoredToken(res.token, remember);
     }
-    if (res.user) {
-      setStoredUser(res.user);
-    }
-    return res;
+    const formatted = formatBackendUser(res.user);
+    setStoredAccount(formatted, remember);
+    return { user: formatted, token: res.token };
   },
-  syncOAuth: async (user: { id: string; email: string }) => {
-    const res = await request<{ user: User; token?: string }>("/api/auth/sync-oauth", {
+
+  googleAuth: async (payload: { credential?: string; idToken?: string; code?: string }) => {
+    const res = await request<{ user: any; token?: string }>("/api/auth/google", {
       method: "POST",
-      body: JSON.stringify(user),
+      body: JSON.stringify(payload),
     });
     if (res.token) {
-      setStoredToken(res.token);
+      setStoredToken(res.token, true);
     }
-    if (res.user) {
-      setStoredUser(res.user);
-    }
-    return res;
+    const formatted = formatBackendUser(res.user);
+    setStoredAccount(formatted, true);
+    return { user: formatted, token: res.token };
   },
+
+  getGoogleAuthUrl: () => request<{ url: string }>("/api/auth/google/url"),
+
+  logout: async () => {
+    try {
+      await request<{ ok: boolean }>("/api/auth/logout", { method: "POST" });
+    } finally {
+      setStoredToken(null);
+      setStoredAccount(null);
+    }
+  },
+
   forgotPassword: (email: string) =>
-    request<{ message: string }>("/api/auth/forgot-password", {
+    request<{ message: string; resetLink?: string }>("/api/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
-  resetPassword: (token: string, password: string) =>
+
+  resetPassword: (password: string, token?: string) =>
     request<{ message: string }>("/api/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify({ password, token }),
     }),
+
   confirmEmail: (email: string) =>
     request<{ ok: boolean; message: string }>("/api/auth/confirm-email", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
-  logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
-  getProfile: () => request<{ profile: Profile | null }>("/api/profile/me"),
-  updateProfile: (body: Partial<Profile>) =>
-    request<{ profile: Profile }>("/api/profile/me", {
+
+  getProfile: async () => {
+    const res = await request<{ profile: any }>("/api/profile/me");
+    return res;
+  },
+
+  updateProfile: async (body: Partial<UserAccount>) => {
+    const res = await request<{ profile: any }>("/api/profile/me", {
       method: "PATCH",
       body: JSON.stringify(body),
-    }),
-  listProjects: (params: { q?: string; skill?: string; status?: string }) => {
+    });
+    return res;
+  },
+
+  listProjects: async (params: { q?: string; skill?: string; category?: string; status?: string } = {}) => {
     const search = new URLSearchParams();
     if (params.q) search.set("q", params.q);
     if (params.skill) search.set("skill", params.skill);
+    if (params.category) search.set("category", params.category);
     if (params.status) search.set("status", params.status);
     const qs = search.toString();
-    return request<{ projects: Project[] }>(`/api/projects${qs ? `?${qs}` : ""}`);
+    const res = await request<{ projects: any[] }>(`/api/projects${qs ? `?${qs}` : ""}`);
+    const projects: Project[] = (res.projects || []).map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      category: p.category || "EdTech",
+      techStack: p.techStack || p.requiredSkills || [],
+      roles: p.roles || [],
+      teamSize: p.teamSize || p.teamCapacity || 4,
+      status: (p.displayStatus === "In progress" ? "In progress" : p.displayStatus === "Completed" ? "Completed" : "Open"),
+      ownerEmail: p.ownerEmail || p.creator?.email || "",
+      ownerName: p.ownerName || p.creator?.email || "Community Member",
+      members: p.memberNames || [p.ownerName || "Member"],
+      requests: p.requests || [],
+    }));
+    return { projects };
   },
-  getProject: (id: string) =>
-    request<{
-      project: Project;
-      isOwner: boolean;
-      isMember: boolean;
-      joinRequests?: JoinRequest[];
-      myJoinRequest: JoinRequest | null;
-    }>(`/api/projects/${id}`),
-  createProject: (body: {
+
+  createProject: async (body: {
     title: string;
     description: string;
-    requiredSkills: string[];
-    teamCapacity: number;
-    status?: ProjectStatus;
-  }) =>
-    request<{ project: Project }>("/api/projects", {
+    category: string;
+    techStack: string[];
+    roles: string[];
+    teamSize: number;
+    status: ProjectStatus;
+  }) => {
+    const res = await request<{ project: any }>("/api/projects", {
       method: "POST",
       body: JSON.stringify(body),
-    }),
-  updateProject: (id: string, body: Record<string, unknown>) =>
-    request<{ project: Project }>(`/api/projects/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    }),
-  deleteProject: (id: string) =>
-    request<void>(`/api/projects/${id}`, { method: "DELETE" }),
-  joinProject: (id: string, message?: string) =>
-    request<{ joinRequest: JoinRequest }>(`/api/projects/${id}/join-requests`, {
+    });
+    return res;
+  },
+
+  joinProject: async (projectId: string, message: string) => {
+    return request<{ joinRequest: any }>(`/api/projects/${projectId}/join-requests`, {
       method: "POST",
       body: JSON.stringify({ message }),
-    }),
-  decideJoin: (id: string, status: "APPROVED" | "REJECTED") =>
-    request<{ joinRequest: JoinRequest }>(`/api/join-requests/${id}`, {
+    });
+  },
+
+  decideJoinRequest: async (requestId: string, decision: "accepted" | "declined") => {
+    return request<{ joinRequest: any }>(`/api/join-requests/${requestId}`, {
       method: "PATCH",
-      body: JSON.stringify({ status }),
-    }),
-  listOpportunities: () => request<{ opportunities: Opportunity[] }>("/api/opportunities"),
-  createOpportunity: (body: {
+      body: JSON.stringify({ status: decision }),
+    });
+  },
+
+  listOpportunities: async () => {
+    const res = await request<{ opportunities: Internship[] }>("/api/opportunities");
+    return res;
+  },
+
+  createOpportunity: async (body: {
     title: string;
-    description: string;
-    type?: OpportunityType;
-    link?: string;
-  }) =>
-    request<{ opportunity: Opportunity }>("/api/admin/opportunities", {
+    company: string;
+    location: string;
+    skills: string[];
+    applyUrl: string;
+  }) => {
+    return request<{ opportunity: Internship }>("/api/opportunities", {
       method: "POST",
       body: JSON.stringify(body),
-    }),
-  adminUsers: () => request<{ users: User[] }>("/api/admin/users"),
-  patchUser: (id: string, body: { isActive?: boolean }) =>
-    request<{ user: User }>(`/api/admin/users/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    }),
-  adminProjects: () => request<{ projects: Project[] }>("/api/admin/projects"),
-  adminDeleteProject: (id: string) =>
-    request<void>(`/api/admin/projects/${id}`, { method: "DELETE" }),
-  adminReports: () => request<{ reports: Report[] }>("/api/admin/reports"),
-  patchReport: (id: string, status: "RESOLVED" | "DISMISSED") =>
-    request<{ report: Report }>(`/api/admin/reports/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    }),
-  createReport: (body: { reason: string; projectId?: string }) =>
-    request("/api/reports", { method: "POST", body: JSON.stringify(body) }),
+    });
+  },
+
+  getNotifications: async () => {
+    const res = await request<{ notices: Notice[] }>("/api/notifications");
+    return res;
+  },
+
+  markNotificationsRead: async () => {
+    return request<{ ok: boolean }>("/api/notifications/read", { method: "PATCH" });
+  },
 };

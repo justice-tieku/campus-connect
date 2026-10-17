@@ -1,139 +1,207 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, OpportunityType, ProjectStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminHash = await bcrypt.hash("AdminDemo123!", 12);
-  const studentHash = await bcrypt.hash("StudentDemo123!", 12);
-  const teammateHash = await bcrypt.hash("TeammateDemo123!", 12);
+  const defaultPassword = "Password123!";
+  const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
+  // 1. Demo users matching the new interface
+  const maya = await prisma.user.upsert({
+    where: { email: "maya@campusconnect.demo" },
+    update: { password: passwordHash, passwordHash },
+    create: {
+      email: "maya@campusconnect.demo",
+      password: passwordHash,
+      passwordHash,
+      role: "STUDENT",
+      firstName: "Maya",
+      lastName: "Chen",
+      institution: "Stanford University",
+      profile: {
+        create: {
+          institution: "Stanford University",
+          biography: "Full-stack builder passionate about educational technology and collaboration tools.",
+          skills: ["React", "TypeScript", "Figma"],
+          experience: "Advanced",
+          availability: "6–10 hours / week",
+          githubLink: "https://github.com/mayachen",
+          onboardingComplete: true,
+        },
+      },
+    },
+  });
+
+  const leo = await prisma.user.upsert({
+    where: { email: "leo@campusconnect.demo" },
+    update: { password: passwordHash, passwordHash },
+    create: {
+      email: "leo@campusconnect.demo",
+      password: passwordHash,
+      passwordHash,
+      role: "STUDENT",
+      firstName: "Leo",
+      lastName: "Martins",
+      institution: "MIT",
+      profile: {
+        create: {
+          institution: "MIT",
+          biography: "Climate tech researcher building mobile tools for sustainable urban travel.",
+          skills: ["Flutter", "Python", "Machine Learning"],
+          experience: "Intermediate",
+          availability: "10+ hours / week",
+          githubLink: "https://github.com/leomartins",
+          onboardingComplete: true,
+        },
+      },
+    },
+  });
+
+  const amina = await prisma.user.upsert({
+    where: { email: "amina@campusconnect.demo" },
+    update: { password: passwordHash, passwordHash },
+    create: {
+      email: "amina@campusconnect.demo",
+      password: passwordHash,
+      passwordHash,
+      role: "STUDENT",
+      firstName: "Amina",
+      lastName: "Yusuf",
+      institution: "Oxford University",
+      profile: {
+        create: {
+          institution: "Oxford University",
+          biography: "Distributed systems engineer building community-powered accessibility reviews.",
+          skills: ["React", "Node.js", "Java"],
+          experience: "Advanced",
+          availability: "6–10 hours / week",
+          githubLink: "https://github.com/aminayusuf",
+          onboardingComplete: true,
+        },
+      },
+    },
+  });
+
+  // Admin user
   const admin = await prisma.user.upsert({
-    where: { email: "admin@campusconnect.dev" },
-    update: {},
+    where: { email: "admin@campusconnect.demo" },
+    update: { password: passwordHash, passwordHash },
     create: {
-      email: "admin@campusconnect.dev",
-      passwordHash: adminHash,
+      email: "admin@campusconnect.demo",
+      password: passwordHash,
+      passwordHash,
       role: "ADMIN",
+      firstName: "Admin",
+      lastName: "Staff",
+      institution: "Campus Connect Global",
       profile: {
         create: {
-          biography: "CampusConnect administrator. Moderates projects and opportunities.",
-          institution: "CampusConnect University",
-          programme: "Student Affairs",
-          skills: ["Moderation", "Community"],
+          institution: "Campus Connect Global",
+          biography: "Campus Connect platform administrator and university partner coordinator.",
+          skills: ["Community", "Leadership"],
+          onboardingComplete: true,
         },
       },
     },
   });
 
-  const student = await prisma.user.upsert({
-    where: { email: "student@campusconnect.dev" },
-    update: {},
-    create: {
-      email: "student@campusconnect.dev",
-      passwordHash: studentHash,
-      role: "STUDENT",
-      profile: {
-        create: {
-          biography: "Computer science student looking for teammates on campus tools.",
-          institution: "CampusConnect University",
-          programme: "BSc Computer Science",
-          skills: ["TypeScript", "React", "PostgreSQL"],
-          githubLink: "https://github.com/example/campusconnect-student",
-          portfolioLink: "https://example.com/portfolio",
-          imageUrl: "https://api.dicebear.com/9.x/initials/svg?seed=Amina",
-        },
-      },
-    },
+  // 2. Starter projects from the new interface
+  const studySyncExisting = await prisma.project.findFirst({
+    where: { title: "StudySync" },
   });
 
-  const teammate = await prisma.user.upsert({
-    where: { email: "teammate@campusconnect.dev" },
-    update: {},
-    create: {
-      email: "teammate@campusconnect.dev",
-      passwordHash: teammateHash,
-      role: "STUDENT",
-      profile: {
-        create: {
-          biography: "Design-focused student interested in civic tech and campus life apps.",
-          institution: "CampusConnect University",
-          programme: "BA Interaction Design",
-          skills: ["Figma", "UX Research", "React"],
-          imageUrl: "https://api.dicebear.com/9.x/initials/svg?seed=Jordan",
-        },
-      },
-    },
-  });
-
-  const existing = await prisma.project.findFirst({
-    where: { title: "Study Group Matcher", creatorId: student.id },
-  });
-
-  if (!existing) {
-    const project = await prisma.project.create({
+  if (!studySyncExisting) {
+    const p1 = await prisma.project.create({
       data: {
-        title: "Study Group Matcher",
+        title: "StudySync",
         description:
-          "Match students in the same modules into small study groups based on availability and learning style. Looking for a designer and a backend teammate.",
-        requiredSkills: ["React", "UX Research", "Node.js"],
-        status: "OPEN",
-        teamCapacity: 4,
-        creatorId: student.id,
-      },
-    });
-    await prisma.projectMember.create({
-      data: { projectId: project.id, userId: student.id },
-    });
-
-    await prisma.project.create({
-      data: {
-        title: "Campus Event Radar",
-        description:
-          "A lightweight board of club events and internships with filters by faculty and skill. Open to collaborators.",
-        requiredSkills: ["TypeScript", "PostgreSQL"],
-        status: "IN_PROGRESS",
+          "A collaborative study planner that helps university teams share goals, notes, and accountability streaks.",
+        category: "EdTech",
+        roles: ["Frontend developer", "Product designer"],
+        requiredSkills: ["React", "TypeScript", "Figma"],
         teamCapacity: 5,
-        creatorId: student.id,
-        members: { create: { userId: student.id } },
+        status: ProjectStatus.OPEN,
+        creatorId: maya.id,
       },
     });
-  }
+    await prisma.projectMember.create({ data: { projectId: p1.id, userId: maya.id } });
 
-  const opp = await prisma.opportunity.findFirst({
-    where: { title: "Summer Product Internship — Civic Labs" },
-  });
-  if (!opp) {
-    await prisma.opportunity.create({
+    const p2 = await prisma.project.create({
       data: {
-        title: "Summer Product Internship — Civic Labs",
+        title: "GreenRoute",
         description:
-          "Paid internship helping universities ship student-facing tools. Remote-friendly with weekly campus office hours.",
-        type: "INTERNSHIP",
-        link: "https://example.com/internships/civic-labs",
+          "A mobile-first tool for finding lower-emission routes and tracking sustainable travel habits.",
+        category: "Climate",
+        roles: ["Mobile developer", "Data scientist"],
+        requiredSkills: ["Flutter", "Python", "Machine Learning"],
+        teamCapacity: 4,
+        status: ProjectStatus.OPEN,
+        creatorId: leo.id,
+      },
+    });
+    await prisma.projectMember.create({ data: { projectId: p2.id, userId: leo.id } });
+
+    const p3 = await prisma.project.create({
+      data: {
+        title: "AccessMap",
+        description:
+          "Community-powered accessibility reviews for lecture halls, libraries, and public campus spaces.",
+        category: "Social impact",
+        roles: ["Backend developer"],
+        requiredSkills: ["React", "Node.js", "Java"],
+        teamCapacity: 6,
+        status: ProjectStatus.IN_PROGRESS,
+        creatorId: amina.id,
+      },
+    });
+    await prisma.projectMember.create({ data: { projectId: p3.id, userId: amina.id } });
+  }
+
+  // 3. Internships matching the new interface
+  const existingInternship = await prisma.opportunity.findFirst({
+    where: { title: "Software Engineering Intern" },
+  });
+
+  if (!existingInternship) {
+    await prisma.opportunity.create({
+      data: {
+        title: "Software Engineering Intern",
+        description: "Join Northstar Labs to build scalable web applications.",
+        company: "Northstar Labs",
+        location: "Remote",
+        skills: ["React", "TypeScript"],
+        link: "https://www.linkedin.com/jobs/",
+        type: OpportunityType.INTERNSHIP,
         createdById: admin.id,
       },
     });
+
     await prisma.opportunity.create({
       data: {
-        title: "Hack for Campus Week",
-        description: "48-hour hackathon focused on student wellbeing and timetable tools. Teams of 2–5.",
-        type: "EVENT",
+        title: "Data & AI Intern",
+        description: "Collaborate on machine learning models and public impact data initiatives.",
+        company: "CivicWorks",
+        location: "Hybrid · London",
+        skills: ["Python", "Machine Learning"],
+        link: "https://www.linkedin.com/jobs/",
+        type: OpportunityType.INTERNSHIP,
         createdById: admin.id,
       },
     });
   }
 
-  console.log("Seeded demo users:");
-  console.log("  admin@campusconnect.dev / AdminDemo123!");
-  console.log("  student@campusconnect.dev / StudentDemo123!");
-  console.log("  teammate@campusconnect.dev / TeammateDemo123!");
-  console.log(`  (ids) admin=${admin.id} student=${student.id} teammate=${teammate.id}`);
+  console.log("Database seeded successfully with new interface data!");
+  console.log("Demo credentials: Password123! for all accounts:");
+  console.log("  - maya@campusconnect.demo");
+  console.log("  - leo@campusconnect.demo");
+  console.log("  - amina@campusconnect.demo");
+  console.log("  - admin@campusconnect.demo");
 }
 
 main()
-  .catch((err) => {
-    console.error(err);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

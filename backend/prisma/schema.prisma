@@ -50,9 +50,11 @@ enum NotificationType {
 }
 
 model User {
-  id          String   @id
+  id          String   @id @default(uuid())
   email       String   @unique
   password    String?
+  passwordHash String?
+  googleId    String?  @unique
   role        Role     @default(STUDENT)
   firstName   String?
   lastName    String?
@@ -85,9 +87,13 @@ model Profile {
   institution   String   @default("")
   programme     String   @default("")
   skills        String[] @default([])
+  experience    String   @default("Beginner")
+  availability  String   @default("")
   githubLink    String?
   portfolioLink String?
   imageUrl      String?
+  onboardingComplete Boolean @default(false)
+  onboardingSkipped  Boolean @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -96,9 +102,11 @@ model Project {
   id             String        @id @default(uuid())
   title          String
   description    String
+  category       String        @default("EdTech")
+  roles          String[]      @default([])
   requiredSkills String[]      @default([])
   status         ProjectStatus @default(OPEN)
-  teamCapacity   Int
+  teamCapacity   Int           @default(4)
   creatorId      String
   creator        User          @relation("ProjectCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   createdAt      DateTime      @default(now())
@@ -144,7 +152,10 @@ model Opportunity {
   id          String          @id @default(uuid())
   title       String
   description String
-  type        OpportunityType @default(OTHER)
+  company     String?
+  location    String?
+  skills      String[]        @default([])
+  type        OpportunityType @default(INTERNSHIP)
   link        String?
   createdById String
   createdBy   User            @relation("OpportunityCreator", fields: [createdById], references: [id], onDelete: Cascade)
